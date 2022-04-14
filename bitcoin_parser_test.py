@@ -9,6 +9,7 @@ parent_path = str(Path(__file__).parent)
 
 os_parent_path = os.getcwd()
 
+# We can get some samples of bitcoin data from https://learnmeabitcoin.com/technical/blkdat
 # Instantiate the Blockchain by giving the path to the directory
 # containing the .blk files created by bitcoind
 block_path = os.path.abspath(parent_path + "/.bitcoin/blocks")

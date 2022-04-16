@@ -15,14 +15,16 @@ os_parent_path = os.getcwd()
 block_path = os.path.abspath(parent_path + "/.bitcoin/blocks")
 print(block_path)
 
-with open(parent_path + "/.bitcoin/blocks/blk00000.dat", "r") as f:
+with open(parent_path + "/.bitcoin/blocks/blk00000.blk", "r") as f:
     print(f.read())
 
 blockchain = Blockchain(block_path)
-os.listdir(parent_path + "/.bitcoin/blocks")
+print(os.listdir(block_path))
+os.listdir("/")
 os.listdir(os_parent_path)
 os.listdir(block_path)
 for block in blockchain.get_unordered_blocks():
+    print(f"block {block}")
     for tx in block.transactions:
         for no, output in enumerate(tx.outputs):
             print(

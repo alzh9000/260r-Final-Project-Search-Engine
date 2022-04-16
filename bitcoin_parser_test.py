@@ -23,6 +23,7 @@ print(os.listdir(block_path))
 print(f"blockchain.get_unordered_blocks() -> {list(blockchain.get_unordered_blocks())}")
 for block in blockchain.get_unordered_blocks():
     print(f"block {block}")
+    print(f"block.transactions {block.transactions}")
     for tx in block.transactions:
         for no, output in enumerate(tx.outputs):
             print(

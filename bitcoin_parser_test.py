@@ -15,7 +15,7 @@ os_parent_path = os.getcwd()
 block_path = os.path.abspath(parent_path + "/.bitcoin/blocks")
 print(block_path)
 
-with open(parent_path + "/.bitcoin/blocks/blk00000.blk", "r") as f:
+with open(parent_path + "/.bitcoin/blocks/blk00000.dat", "r") as f:
     print(f.read())
 
 blockchain = Blockchain(block_path)

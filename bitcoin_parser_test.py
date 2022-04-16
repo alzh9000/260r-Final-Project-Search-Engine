@@ -20,10 +20,7 @@ with open(parent_path + "/.bitcoin/blocks/blk00000.blk", "r") as f:
 
 blockchain = Blockchain(block_path)
 print(os.listdir(block_path))
-os.listdir("/")
-os.listdir(os_parent_path)
-os.listdir(block_path)
-print(f"blockchain.get_unordered_blocks() -> {blockchain.get_unordered_blocks()}")
+print(f"blockchain.get_unordered_blocks() -> {list(blockchain.get_unordered_blocks())}")
 for block in blockchain.get_unordered_blocks():
     print(f"block {block}")
     for tx in block.transactions:

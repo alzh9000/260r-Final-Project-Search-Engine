@@ -45,6 +45,7 @@ def parse(blockchain, blkNo):
             block.toString()
         counter += 1
         print("#" * 20 + "Block counter No. %s" % counter + "#" * 20)
+        # TODO: figure out why there's this limit of 0xFF for blkNo
         if counter >= blkNo and blkNo != 0xFF:
             continueParsing = False
 
@@ -54,10 +55,11 @@ def parse(blockchain, blkNo):
 
 
 def main():
-    # What's the difference between the number of blocks vs the number of transactions? I thought each block only had 1 transaction? But it seems like potentially there can be more than 1 transaction per block. In that case, do we want each row to still be just 1 transaction or 1 block? 
-    blkNo = 0xFF
-    blkNo = num_t
-    
+    # What's the difference between the number of blocks vs the number of transactions? I thought each block only had 1 transaction? But it seems like potentially there can be more than 1 transaction per block. In that case, do we want each row to still be just 1 transaction or 1 block?
+    # I think we should do 1 block per CSV, then 1 row for each transaction in the block
+    # TODO: figure out why there's this limit of 0xFF for blkNo
+    blkNo = num_t if num_t < 0xFF else 0xFF
+
     with open(dat, "rb") as blockchain:
         parse(blockchain, blkNo)
 

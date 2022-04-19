@@ -88,6 +88,9 @@ class Block:
         for t in self.Txs:
             t.toString()
         print("#### end of all %d transactins" % self.txCount)
+        
+    def toList(self):
+        return [self.]
 
 
 class Tx:

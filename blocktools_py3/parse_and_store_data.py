@@ -14,7 +14,6 @@ parser.add_argument(
     default="actual_blk00000.dat",
     help="The blk*.dat file that you want to check the transaction data from",
 )
-# args.dat_file
 
 # Add a parser argument for the .dat file name
 parser.add_argument(
@@ -27,6 +26,9 @@ parser.add_argument(
 )
 
 args = parser.parse_args()
+
+dat = args.dat_file
+num_t = args.num_transactions
 
 
 def parse(blockchain, blkNo):
@@ -52,16 +54,12 @@ def parse(blockchain, blkNo):
 
 
 def main():
-    if len(sys.argv) < 2:
-        print("Usage: sight.py filename")
-    else:
-        blkNo = 0xFF
-        if len(sys.argv) == 3:
-            blkNo = int(sys.argv[2])
-            print("Parsing %d blocks" % blkNo)
-
-        with open(sys.argv[1], "rb") as blockchain:
-            parse(blockchain, blkNo)
+    # What's the difference between the number of blocks vs the number of transactions? I thought each block only had 1 transaction? But it seems like potentially there can be more than 1 transaction per block. In that case, do we want each row to still be just 1 transaction or 1 block? 
+    blkNo = 0xFF
+    blkNo = num_t
+    
+    with open(dat, "rb") as blockchain:
+        parse(blockchain, blkNo)
 
 
 if __name__ == "__main__":

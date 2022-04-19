@@ -1,4 +1,3 @@
-# IMPORTANT: YOU CAN"T IMPORT NUMPY OR PANDAS IN THIS FILE.
 import numpy as np
 import pandas as pd
 from blocktools import *

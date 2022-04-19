@@ -74,6 +74,7 @@ class Block:
                 "Lock Time",
             ]
         )
+        self.t_dict_list = []
 
     def continueParsing(self):
         return self.continueParsing
@@ -110,6 +111,10 @@ class Block:
             t.toString()
             t.add_info_to_df(self.t_df)
         print("#### end of all %d transactins" % self.txCount)
+        
+    def toDataFrame(self):
+        self.t_df = pd.DataFrame(self.t_dict_list)
+        return self.t_df
 
 
 class Tx:
@@ -143,6 +148,17 @@ class Tx:
         print("Lock Time:\t %d" % self.lockTime)
 
     def add_info_to_df(t_df):
+
+        for i in range(0, self.inCount):
+            input = txInput(blockchain)
+            self.inputs.append(input)
+        self.outCount = varint(blockchain)
+        self.outputs = []
+        if self.outCount > 0:
+            for i in range(0, self.outCount):
+                output = txOutput(blockchain)
+                self.outputs.append(output)
+        self.lockTime = uint4(blockchain)
         t_df.append()
 
 

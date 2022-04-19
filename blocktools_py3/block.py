@@ -108,6 +108,7 @@ class Block:
         print("##### Tx Count: %d" % self.txCount)
         for t in self.Txs:
             t.toString()
+            t.add_info_to_df(self.t_df)
         print("#### end of all %d transactins" % self.txCount)
 
 
@@ -140,6 +141,9 @@ class Tx:
         for o in self.outputs:
             o.toString()
         print("Lock Time:\t %d" % self.lockTime)
+
+    def add_info_to_df(t_df):
+        t_df.append()
 
 
 class txInput:

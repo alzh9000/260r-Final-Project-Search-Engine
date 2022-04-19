@@ -1,3 +1,6 @@
+# IMPORTANT: YOU CAN"T IMPORT NUMPY OR PANDAS IN THIS FILE.
+# import numpy as np
+# import pandas as pd
 from blocktools import *
 from opcode import *
 from datetime import datetime
@@ -54,6 +57,9 @@ class Block:
         else:
             self.continueParsing = False
 
+        # store transactions as rows in a dataframe
+        # self.t_df = pd.DataFrame(columns=["A", "B", "C", "D", "E", "F", "G"])
+
     def continueParsing(self):
         return self.continueParsing
 
@@ -88,9 +94,6 @@ class Block:
         for t in self.Txs:
             t.toString()
         print("#### end of all %d transactins" % self.txCount)
-        
-    def toList(self):
-        return [self.]
 
 
 class Tx:

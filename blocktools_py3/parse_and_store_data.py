@@ -7,14 +7,24 @@ import argparse
 
 parser = argparse.ArgumentParser(description="Check the status of an asynchronous job.")
 parser.add_argument(
-    "-j",
-    "--job_id",
+    "-d",
+    "--dat_file",
     type=str,
     required=False,
-    default="job_c7f39jpswdy220gs5f70",
-    help="The job_id of the job that you want to check the status of",
+    default="actual_blk00000.dat",
+    help="The blk*.dat file that you want to check the transaction data from",
 )
-# args.job_id
+# args.dat_file
+
+# Add a parser argument for the .dat file name
+parser.add_argument(
+    "-t",
+    "--num_transactions",
+    type=int,
+    required=False,
+    default=10,
+    help="The number of transactions to parse",
+)
 
 args = parser.parse_args()
 

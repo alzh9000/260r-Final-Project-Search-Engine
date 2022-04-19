@@ -111,7 +111,7 @@ class Block:
             t.toString()
             t.add_info_to_df(self.t_df)
         print("#### end of all %d transactins" % self.txCount)
-        
+
     def toDataFrame(self):
         self.t_df = pd.DataFrame(self.t_dict_list)
         return self.t_df
@@ -147,19 +147,24 @@ class Tx:
             o.toString()
         print("Lock Time:\t %d" % self.lockTime)
 
-    def add_info_to_df(t_df):
-
-        for i in range(0, self.inCount):
-            input = txInput(blockchain)
-            self.inputs.append(input)
-        self.outCount = varint(blockchain)
-        self.outputs = []
-        if self.outCount > 0:
-            for i in range(0, self.outCount):
-                output = txOutput(blockchain)
-                self.outputs.append(output)
-        self.lockTime = uint4(blockchain)
-        t_df.append()
+    def add_info_to_df(self, t_dict_list):
+        t_dict = {"Tx Version": self.version}
+        t_dict["Lock Time"] = self.lockTime
+        t_dict["Inputs"] = self.inCount
+        t_dict["Outputs"] = self.outCount
+        for i in self.inputs:
+            t_dict["Tx Out Index"] = i.decodeOutIdx(i.txOutId)
+            t_dict["Script Length"] = i.scriptLen
+            i.decodeScriptSig(i.scriptSig)
+            t_dict["Sequence"] = i.seqNo
+        for o in self.outputs:
+            t_dict["Value"] = o.value
+            o.decodeScriptPubkey(o.scriptPubkey)
+            t_dict["Script Len"] = o.scriptLen
+            t_dict["Pubkey OP_CODE"] = o.pubkeyOpCode
+            t_dict["Pure Pubkey"] = o.purePubkey
+            t_dict["ScriptPubkey"] = o.scriptPubkey
+        t_dict_list.append(t_dict)
 
 
 class txInput:

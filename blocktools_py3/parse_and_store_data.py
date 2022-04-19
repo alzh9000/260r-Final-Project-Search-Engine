@@ -1,4 +1,6 @@
 #!/usr/bin/python
+import numpy as np
+import pandas as pd
 import sys
 from blocktools import *
 from block import Block, BlockHeader

@@ -159,7 +159,7 @@ class Tx:
             t_dict["Sequence"] = i.seqNo
         for o in self.outputs:
             t_dict["Value"] = o.value
-            o.decodeScriptPubkey(o.scriptPubkey)
+            o.decodeScriptPubkey(o.pubkey)
             t_dict["Script Len"] = o.scriptLen
             t_dict["Pubkey OP_CODE"] = o.pubkeyOpCode
             t_dict["Pure Pubkey"] = o.purePubkey
@@ -214,6 +214,9 @@ class txOutput:
         self.value = uint8(blockchain)
         self.scriptLen = varint(blockchain)
         self.pubkey = blockchain.read(self.scriptLen)
+        self.scriptPubkey = None
+        self.purePubkey = None
+        self.pubkeyOpCode = None
 
     def toString(self):
         print("\tValue:\t\t %d" % self.value + " Satoshi")
@@ -240,6 +243,7 @@ class txOutput:
             )
             print("\tPure Pubkey:\t   %s" % hexstr[2 : 2 + keylen * 2])
             self.purePubkey = "%s" % hexstr[2 : 2 + keylen * 2]
+            self.scriptPubkey = hexstr
             return hexstr
         if op_code1 == "OP_DUP":  # P2PKHA pay to pubkey hash mode
             op_code2 = OPCODE_NAMES[int(hexstr[2:4], 16)] + " "
@@ -275,6 +279,7 @@ class txOutput:
             )
             print("\tPubkeyHash:\t       %s" % hexstr[6 : 6 + keylen * 2])
             self.purePubkey = "%s" % hexstr[6 : 6 + keylen * 2]
+            self.scriptPubkey = hexstr
             return hexstr
         elif op_code1 == "OP_HASH160":  # P2SHA pay to script hash
             keylen = int(hexstr[2:4], 16)
@@ -302,10 +307,12 @@ class txOutput:
             )
             print("\tPure Pubkey:\t     %s" % hexstr[4 : 4 + keylen * 2])
             self.purePubkey = "%s" % hexstr[4 : 4 + keylen * 2]
+            self.scriptPubkey = hexstr
             return hexstr
         else:  # TODO extend for multi-signature parsing
             print(
                 "\t Need to extend multi-signatuer parsing %x" % int(hexstr[0:2], 16)
                 + op_code1
             )
+            self.scriptPubkey = hexstr
             return hexstr

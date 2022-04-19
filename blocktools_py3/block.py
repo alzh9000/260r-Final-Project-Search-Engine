@@ -57,7 +57,23 @@ class Block:
             self.continueParsing = False
 
         # store transactions as rows in a dataframe
-        # self.t_df = pd.DataFrame(columns=["A", "B", "C", "D", "E", "F", "G"])
+        self.t_df = pd.DataFrame(
+            columns=[
+                "Tx Version",
+                "Inputs",
+                "Coinbase Text",
+                "Tx Out Index",
+                "Script Length",
+                "Sequence",
+                "Outputs",
+                "Value",
+                "Script Len",
+                "Pubkey OP_CODE",
+                "Pure Pubkey",
+                "ScriptPubkey",
+                "Lock Time",
+            ]
+        )
 
     def continueParsing(self):
         return self.continueParsing

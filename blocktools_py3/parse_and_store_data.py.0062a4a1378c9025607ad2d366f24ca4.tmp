@@ -28,7 +28,7 @@ parser.add_argument(
     type=int,
     required=False,
     default=10,
-    help="The number of transactions to parse",
+    help="The number of blocks to parse",
 )
 
 args = parser.parse_args()

@@ -51,6 +51,9 @@ def parse(blockchain, blkNo):
             block.toString()
             block_df = block.toDataFrame()
             print(block_df)
+            filename = block.getFileName()
+            block_df.to_csv("csv/" + filename + ".csv")
+            block_df.to_pickle("pandas/" + filename + ".pkl")
         counter += 1
         print("#" * 20 + "Block counter No. %s" % counter + "#" * 20)
         # TODO: figure out why there's this limit of 0xFF for blkNo

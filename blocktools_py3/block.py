@@ -22,7 +22,8 @@ class BlockHeader:
         print("Time stamp\t " + self.decodeTime(self.time))
         print("Difficulty\t %d" % self.bits)
         print("Nonce\t\t %s" % self.nonce)
-
+        return self.decodeTime(self.time)
+        
     def decodeTime(self, time):
         utc_time = datetime.utcfromtimestamp(time)
         return utc_time.strftime("%Y-%m-%d %H:%M:%S.%f+00:00 (UTC)")
@@ -115,6 +116,9 @@ class Block:
     def toDataFrame(self):
         self.t_df = pd.DataFrame(self.t_dict_list)
         return self.t_df
+    
+    def getFileName(self):
+        return self.blockHeader.toString()
 
 
 class Tx:

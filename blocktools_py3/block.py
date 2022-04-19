@@ -235,7 +235,11 @@ class txOutput:
                 " \tPubkey OP_CODE:\t "
                 "None " + "Bytes:%d " % keylen + "tail_op_code:" + op_codeTail + " "
             )
+            self.pubkeyOpCode = (
+                "None " + "Bytes:%d " % keylen + "tail_op_code:" + op_codeTail + " "
+            )
             print("\tPure Pubkey:\t   %s" % hexstr[2 : 2 + keylen * 2])
+            self.purePubkey = "%s" % hexstr[2 : 2 + keylen * 2]
             return hexstr
         if op_code1 == "OP_DUP":  # P2PKHA pay to pubkey hash mode
             op_code2 = OPCODE_NAMES[int(hexstr[2:4], 16)] + " "
@@ -258,7 +262,19 @@ class txOutput:
                 + " "
                 + op_codeTailLast
             )
+            self.pubkeyOpCode = (
+                op_code1
+                + " "
+                + op_code2
+                + " "
+                + "Bytes:%d " % keylen
+                + "tail_op_code:"
+                + op_codeTail2nd
+                + " "
+                + op_codeTailLast
+            )
             print("\tPubkeyHash:\t       %s" % hexstr[6 : 6 + keylen * 2])
+            self.purePubkey = "%s" % hexstr[6 : 6 + keylen * 2]
             return hexstr
         elif op_code1 == "OP_HASH160":  # P2SHA pay to script hash
             keylen = int(hexstr[2:4], 16)
@@ -275,7 +291,17 @@ class txOutput:
                 + op_codeTail
                 + " "
             )
+            self.pubkeyOpCode = (
+                op_code1
+                + " "
+                + " "
+                + "Bytes:%d " % keylen
+                + "tail_op_code:"
+                + op_codeTail
+                + " "
+            )
             print("\tPure Pubkey:\t     %s" % hexstr[4 : 4 + keylen * 2])
+            self.purePubkey = "%s" % hexstr[4 : 4 + keylen * 2]
             return hexstr
         else:  # TODO extend for multi-signature parsing
             print(

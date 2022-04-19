@@ -1,8 +1,8 @@
 # IMPORTANT: YOU CAN"T IMPORT NUMPY OR PANDAS IN THIS FILE.
-# import numpy as np
-# import pandas as pd
+import numpy as np
+import pandas as pd
 from blocktools import *
-from opcode import *
+from block_opcode import *
 from datetime import datetime
 import time
 

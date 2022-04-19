@@ -2,6 +2,7 @@
 import sys
 from blocktools import *
 from block import Block, BlockHeader
+import pandas as pd
 
 import argparse
 

@@ -6,6 +6,9 @@ from blocktools import *
 from block import Block, BlockHeader
 import pandas as pd
 
+# removes the max column limit for displaying on the screen
+pd.set_option("display.max_columns", None)
+
 import argparse
 
 parser = argparse.ArgumentParser(description="Check the status of an asynchronous job.")
@@ -46,6 +49,8 @@ def parse(blockchain, blkNo):
         continueParsing = block.continueParsing
         if continueParsing:
             block.toString()
+            block_df = block.toDataFrame()
+            print(block_df)
         counter += 1
         print("#" * 20 + "Block counter No. %s" % counter + "#" * 20)
         # TODO: figure out why there's this limit of 0xFF for blkNo

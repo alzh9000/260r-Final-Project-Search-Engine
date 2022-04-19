@@ -109,7 +109,7 @@ class Block:
         print("##### Tx Count: %d" % self.txCount)
         for t in self.Txs:
             t.toString()
-            t.add_info_to_df(self.t_df)
+            t.add_info_to_df(self.t_dict_list)
         print("#### end of all %d transactins" % self.txCount)
 
     def toDataFrame(self):

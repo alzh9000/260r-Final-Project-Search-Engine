@@ -1,22 +1,41 @@
-type Hash256 = sha2::digest::generic_array::GenericArray<u8, sha2::digest::consts::U16>;
+use itertools::Itertools;
+use std::string::String;
 
+use sha2::Digest;
+
+// Note that Hash256 types are stored internally in little-endian! (reverse byte order). This is
+// due to an accident in the original Bitcoin protocol, and we keep it this way for efficiency
+// reasons.
+pub type Hash256 = [u8; 32];
+
+pub fn print_hash(h: &Hash256) -> String {
+    // Since these are stored in reverse byte order, we need to iterate backwards.
+    format!("{:02x}", h.iter().rev().format(""))
+}
+
+#[derive(Debug)]
 pub struct Metadata {
-    id: Hash256,
-    block: Hash256,
-    blockheight: u32,
-    size: u32,
-    total_input: u64,  // in Satoshi (1/100M of a Bitcoin)
-    total_output: u64, // in Satoshi (1/100M of a Bitcoin)
-    fees: u64,         // in Satoshi (1/100M of a Bitcoin)
+    pub id: Hash256,
+    pub block: Hash256,
+    pub blockheight: u32,
+    pub size: u32,
+    pub total_input: u64,  // in Satoshi (1/100M of a Bitcoin)
+    pub total_output: u64, // in Satoshi (1/100M of a Bitcoin)
+    pub fees: u64,         // in Satoshi (1/100M of a Bitcoin)
 }
 
+#[derive(Debug)]
 pub struct Block {
-    id: Hash256,
-    version: u32,
-    prev_block_id: Hash256,
-    hash_merkle_root: Hash256,
-    unix_time: u32,
-    tx_count: u32,
+    pub id: Hash256,
+    pub version: u32,
+    pub prev_block_id: Hash256,
+    pub merkle_root: Hash256,
+    pub unix_time: u32,
+    pub tx_count: u32,
 }
 
-// TODO: raw versions of these?
+// TODO: move somewhere else
+pub fn hash_twice(x: &[u8]) -> Hash256 {
+    let once = sha2::Sha256::digest(x);
+    sha2::Sha256::digest(once).into()
+}

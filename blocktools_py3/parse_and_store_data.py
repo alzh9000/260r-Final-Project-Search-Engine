@@ -17,7 +17,7 @@ parser.add_argument(
     "--dat_file",
     type=str,
     required=False,
-    default="actual_blk00000.dat",
+    default="savvy_blk00000.dat",
     help="The blk*.dat file that you want to check the transaction data from",
 )
 parser.add_argument(

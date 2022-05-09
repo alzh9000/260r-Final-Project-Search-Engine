@@ -39,7 +39,7 @@ fn take_32_bytes_as_hash(input: &[u8]) -> IResult<&[u8], crate::transaction::Has
     Ok((input, res))
 }
 
-// Note that tx_count is not correct when this function returns.
+// Note that tx_count and height are not correct when this function returns.
 fn parse_block_header(input: &[u8]) -> IResult<&[u8], transaction::Block> {
     assert_eq!(input.len(), 80);
 
@@ -58,6 +58,7 @@ fn parse_block_header(input: &[u8]) -> IResult<&[u8], transaction::Block> {
             merkle_root,
             unix_time,
             tx_count: u32::MAX,
+            height: u32::MAX,
         },
     ))
 }

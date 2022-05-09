@@ -1,0 +1,34 @@
+[{
+    "id": "task1",
+    "displayName": "install_rqlite",
+    "commandLine": "curl -L https://github.com/rqlite/rqlite/releases/download/v7.3.2/rqlite-v7.3.2-linux-amd64.tar.gz -o rqlite-v7.3.2-linux-amd64.tar.gz
+    tar xvfz rqlite-v7.3.2-linux-amd64.tar.gz && cd rqlite-v7.3.2-linux-amd64 && ./rqlited ~/node.1",
+    "constraints": {
+      "maxWallClockTime": "P1D",
+      "maxTaskRetryCount": 2
+    }
+//   },
+//   {
+//     "id": "task2",
+//     "displayName": "displayName3",
+//     "commandLine": "/bin/bash -c 'printenv AZ_BATCH_TASK_WORKING_DIR'",
+//     "constraints": {
+//       "maxWallClockTime": "P1D",
+//       "maxTaskRetryCount": 2
+//     }
+//   },
+//   {
+//     "id": "task4",
+//     "displayName": "displayName4",
+//     "commandLine": "/bin/bash -c 'printenv AZ_BATCH_TASK_WORKING_DIR'",
+//     "environmentSettings": [
+//       {
+//         "name": "env1",
+//         "value": "value1"
+//       },
+//       {
+//         "name": "env2",
+//         "value": "value2"
+//       }
+//     ]
+  },]

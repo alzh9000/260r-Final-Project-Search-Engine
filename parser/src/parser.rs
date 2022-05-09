@@ -2,11 +2,10 @@ use crate::transaction;
 use nom::{
     bytes::complete::{tag, take},
     combinator::cond,
-    number::complete::{le_u32, le_u64},
+    number::complete::{le_u16, le_u32, le_u64},
     sequence::{preceded, tuple},
     IResult, ToUsize,
 };
-use nom_varint::take_varint;
 use std::collections::HashMap;
 
 #[derive(Debug)]
@@ -76,7 +75,7 @@ fn parse_block_header_and_tx_count(input: &[u8]) -> IResult<&[u8], transaction::
 
     let mut parser = tuple((le_u32, take_32_bytes_as_hash, take_32_bytes_as_hash, le_u32));
     let (_, (version, prev_id, merkle_root, unix_time)) = parser(header)?;
-    let (input, tx_count) = take_varint(input)?;
+    let (input, tx_count) = take_varint_fixed(input)?;
 
     Ok((
         input,
@@ -115,19 +114,23 @@ fn parse_transaction(
     let orig_input = input;
 
     let (input, version) = le_u32(input)?;
-    let (input, input_count) = take_varint(input)?;
+    let (input, input_count) = take_varint_fixed(input)?;
 
     // Need to deal with the optional witness flag in newer protocols versions if it's there.
     let witnesses_enabled = input_count == 0;
     let (input, input_count) =
-        match cond(witnesses_enabled, tuple((take(1u8), take_varint)))(input)? {
+        match cond(witnesses_enabled, tuple((take(1u8), take_varint_fixed)))(input)? {
             (_i, None) => (input, input_count),
             (i, Some((_, s))) => (i, s),
         };
 
-    let (input, (tx_inputs, tx_outputs)) = take_tx_inputs_and_outputs(input, input_count)?;
+    let (input, (tx_inputs, tx_outputs)) =
+        take_tx_inputs_and_outputs(input, input_count.to_usize())?;
 
-    let input = match cond(witnesses_enabled, |x| skip_witnesses(x, input_count))(input)? {
+    let input = match cond(witnesses_enabled, |x| {
+        skip_witnesses(x, input_count.to_usize())
+    })(input)?
+    {
         (_i, None) => input,
         (i, Some(_)) => i,
     };
@@ -163,7 +166,7 @@ fn take_tx_inputs_and_outputs(
         &input[..10]
     );
 
-    let (input, output_count) = take_varint(input)?;
+    let (input, output_count) = take_varint_fixed(input)?;
 
     println!(
         "take_tx_inputs_and_outputs: output_count: {}, input_count: {}",
@@ -171,7 +174,7 @@ fn take_tx_inputs_and_outputs(
     );
 
     let (input, tx_output_values) =
-        nom::multi::count(|x| take_tx_output_value(x), output_count)(input)?;
+        nom::multi::count(|x| take_tx_output_value(x), output_count.to_usize())(input)?;
 
     println!("{:#?}", tx_output_values);
 
@@ -200,7 +203,7 @@ fn take_tx_input(input: &[u8]) -> IResult<&[u8], transaction::Input> {
     );
 
     // Skip script and sequence number
-    let (input, sig_len) = take_varint(input)?;
+    let (input, sig_len) = take_varint_fixed(input)?;
     let amt_to_skip = sig_len + 4;
 
     println!("take_tx_input: amt_to_skip: {}", amt_to_skip);
@@ -219,7 +222,7 @@ fn take_tx_output_value(input: &[u8]) -> IResult<&[u8], transaction::Value> {
     let (input, value) = le_u64(input)?;
 
     // Skip script
-    let (input, sig_len) = take_varint(input)?;
+    let (input, sig_len) = take_varint_fixed(input)?;
     let (input, _) = take(sig_len)(input)?;
 
     println!("take_tx_output_value: {}", value);
@@ -228,7 +231,7 @@ fn take_tx_output_value(input: &[u8]) -> IResult<&[u8], transaction::Value> {
 }
 
 fn skip_single_witness(input: &[u8]) -> IResult<&[u8], ()> {
-    let (input, len) = take_varint(input)?;
+    let (input, len) = take_varint_fixed(input)?;
     let (input, _) = take(len)(input)?;
     Ok((input, ()))
 }
@@ -236,4 +239,20 @@ fn skip_single_witness(input: &[u8]) -> IResult<&[u8], ()> {
 fn skip_witnesses(input: &[u8], input_count: usize) -> IResult<&[u8], ()> {
     let (input, _) = nom::multi::count(skip_single_witness, input_count)(input)?;
     Ok((input, ()))
+}
+
+fn take_varint_fixed(input: &[u8]) -> IResult<&[u8], u64> {
+    let (input, first_byte) = take(1u8)(input)?;
+    let first_byte = first_byte[0];
+    if first_byte < 0xFD {
+        Ok((input, first_byte.into()))
+    } else if first_byte == 0xFD {
+        let (input, val) = le_u16(input)?;
+        Ok(((input), val.into()))
+    } else if first_byte == 0xFE {
+        let (input, val) = le_u32(input)?;
+        Ok(((input), val.into()))
+    } else {
+        return le_u64(input);
+    }
 }

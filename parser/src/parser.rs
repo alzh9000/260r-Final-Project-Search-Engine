@@ -32,7 +32,7 @@ impl Parser {
             let cur_input = match raw_block_size(input) {
                 Err(_e) => return,
                 Ok((_i, 0)) => return,
-                Ok((i, s)) => i,
+                Ok((i, _s)) => i,
             };
             let (cur_input, block) = parse_block_header_and_tx_count(cur_input).unwrap();
 

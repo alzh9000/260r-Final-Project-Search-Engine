@@ -2,9 +2,10 @@ use crate::transaction;
 use nom::{
     bytes::complete::{tag, take},
     combinator::cond,
+    multi::count,
     number::complete::{le_u32, le_u64},
     sequence::{preceded, tuple},
-    IResult,
+    IResult, ToUsize,
 };
 use nom_varint::take_varint;
 use std::collections::HashMap;
@@ -27,9 +28,22 @@ impl Matcher {
         let file = std::fs::read("/Volumes/SavvyT7Red/BitcoinCore/blocks/blk00000.dat").unwrap();
         let file = file.as_slice();
         let (input, size) = raw_block_size(file).unwrap();
-        let (_input, block) = parse_block_header_and_tx_count(input).unwrap();
+        let (input, block) = parse_block_header_and_tx_count(input).unwrap();
 
         println!("{:#?}", block);
+
+        let (input, txs) = parse_transactions(input, block.id, block.tx_count.to_usize()).unwrap();
+
+        println!("{:#?}", &txs);
+
+        let (input, size) = raw_block_size(input).unwrap();
+        let (input, block) = parse_block_header_and_tx_count(input).unwrap();
+
+        println!("{:#?}", block);
+
+        let (input, txs) = parse_transactions(input, block.id, block.tx_count.to_usize()).unwrap();
+
+        println!("{:#?}", &txs);
 
         size
     }
@@ -57,7 +71,6 @@ fn parse_block_header_and_tx_count(input: &[u8]) -> IResult<&[u8], transaction::
 
     let mut parser = tuple((le_u32, take_32_bytes_as_hash, take_32_bytes_as_hash, le_u32));
     let (_, (version, prev_id, merkle_root, unix_time)) = parser(header)?;
-    println!("{:?}", &input[..10]);
     let (input, tx_count) = take_varint(input)?;
 
     Ok((
@@ -72,6 +85,14 @@ fn parse_block_header_and_tx_count(input: &[u8]) -> IResult<&[u8], transaction::
             height: u32::MAX,
         },
     ))
+}
+
+fn parse_transactions(
+    input: &[u8],
+    block: transaction::BlockHash,
+    tx_count: usize,
+) -> IResult<&[u8], Vec<transaction::Metadata>> {
+    nom::multi::count(|i| parse_transaction(i, block), tx_count)(input)
 }
 
 fn parse_transaction(
@@ -99,16 +120,20 @@ fn parse_transaction(
         (i, Some(_)) => i,
     };
 
-    let tx_range = orig_input..input;
-    let id = transaction::hash_twice(tx_range.start);
+    // Skip the locktime field
+    let (input, _) = le_u32(input)?;
 
-    // TODO: correctly calculate blockheight and size
+    let size = input.as_ptr() as usize - orig_input.as_ptr() as usize;
+    let id = transaction::hash_twice(&orig_input[..size]);
+    let size = size as u32;
+
+    // TODO: correctly calculate blockheight
     let result = transaction::Metadata {
         id: id.into(),
         version,
         block,
         blockheight: u32::MAX,
-        size: u32::MAX,
+        size,
     };
 
     Ok((input, result))

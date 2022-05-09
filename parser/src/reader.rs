@@ -34,9 +34,8 @@ fn take_header(input: &[u8]) -> IResult<&[u8], &[u8]> {
 }
 
 fn take_32_bytes_as_hash(input: &[u8]) -> IResult<&[u8], crate::transaction::Hash256> {
-    assert!(input.len() >= 32);
-    let res: crate::transaction::Hash256 =
-        input[..32].try_into().expect("Wrong length; expected 32");
+    let (input, data) = take(32u8)(input)?;
+    let res: crate::transaction::Hash256 = data.try_into().expect("Wrong length; expected 32");
     Ok((input, res))
 }
 

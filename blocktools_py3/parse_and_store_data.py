@@ -20,8 +20,6 @@ parser.add_argument(
     default="actual_blk00000.dat",
     help="The blk*.dat file that you want to check the transaction data from",
 )
-
-# Add a parser argument for the .dat file name
 parser.add_argument(
     "-b",
     "--num_blocks",
@@ -29,6 +27,14 @@ parser.add_argument(
     required=False,
     default=10,
     help="The number of blocks to parse",
+)
+parser.add_argument(
+    "-n",
+    "--num_transactions",
+    type=int,
+    required=False,
+    default=10,
+    help="The number of transactions to parse",
 )
 
 args = parser.parse_args()

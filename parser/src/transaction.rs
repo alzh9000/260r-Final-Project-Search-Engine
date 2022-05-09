@@ -13,6 +13,7 @@ type Hash256 = [u8; 32];
 // implementations of all three.
 duplicate! {
     [ name; [TxHash]; [BlockHash]; [MerkleRoot] ]
+#[derive(Clone, Copy)]
 pub struct name(Hash256);
 
 impl fmt::Debug for name {
@@ -86,4 +87,8 @@ pub struct Input {
 pub fn hash_twice(x: &[u8]) -> Hash256 {
     let once = sha2::Sha256::digest(x);
     sha2::Sha256::digest(once).into()
+}
+
+pub fn hash_once(x: &[u8]) -> Hash256 {
+    sha2::Sha256::digest(x).into()
 }

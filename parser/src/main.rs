@@ -3,5 +3,5 @@ mod transaction;
 
 fn main() {
     println!("Hello, world!");
-    reader::f();
+    println!("{}", reader::f())
 }

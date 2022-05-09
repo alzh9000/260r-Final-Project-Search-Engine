@@ -32,19 +32,13 @@ impl Parser {
             let cur_input = match raw_block_size(input) {
                 Err(_e) => return,
                 Ok((_i, 0)) => return,
-                Ok((i, s)) => {
-                    println!("size: {}", s);
-                    i
-                }
+                Ok((i, s)) => i,
             };
             let (cur_input, block) = parse_block_header_and_tx_count(cur_input).unwrap();
-
-            println!("{:#?}", block);
 
             let (cur_input, txs) =
                 parse_transactions(cur_input, block.id, block.tx_count.to_usize()).unwrap();
 
-            println!("{:#?}", &txs);
             println!("{}", count);
             count += 1;
 
@@ -96,14 +90,7 @@ fn parse_transactions(
     block: transaction::BlockHash,
     tx_count: usize,
 ) -> IResult<&[u8], Vec<transaction::Metadata>> {
-    nom::multi::count(
-        |i| {
-            let res = parse_transaction(i, block);
-            println!("{:?}", block);
-            res
-        },
-        tx_count,
-    )(input)
+    nom::multi::count(|i| parse_transaction(i, block), tx_count)(input)
 }
 
 fn parse_transaction(
@@ -160,23 +147,10 @@ fn take_tx_inputs_and_outputs(
 ) -> IResult<&[u8], (Vec<transaction::Input>, Vec<transaction::Output>)> {
     let (input, tx_inputs) = nom::multi::count(take_tx_input, input_count)(input)?;
 
-    println!(
-        "take_tx_inputs_and_outputs: tx_inputs: {:#?}. About to use input: {:#?}",
-        tx_inputs,
-        &input[..10]
-    );
-
     let (input, output_count) = take_varint_fixed(input)?;
-
-    println!(
-        "take_tx_inputs_and_outputs: output_count: {}, input_count: {}",
-        output_count, input_count
-    );
 
     let (input, tx_output_values) =
         nom::multi::count(|x| take_tx_output_value(x), output_count.to_usize())(input)?;
-
-    println!("{:#?}", tx_output_values);
 
     let tx_outputs = tx_output_values
         .iter()
@@ -196,17 +170,9 @@ fn take_tx_inputs_and_outputs(
 fn take_tx_input(input: &[u8]) -> IResult<&[u8], transaction::Input> {
     let (input, (source_tx, source_index)) = tuple((take_32_bytes_as_hash, le_u32))(input)?;
 
-    println!("take_tx_input: source_index: {}", source_index);
-    println!(
-        "take_tx_input: about to take varint with input: {:#?}",
-        &input[..3]
-    );
-
     // Skip script and sequence number
     let (input, sig_len) = take_varint_fixed(input)?;
     let amt_to_skip = sig_len + 4;
-
-    println!("take_tx_input: amt_to_skip: {}", amt_to_skip);
 
     let (input, _) = take(amt_to_skip)(input)?;
 
@@ -224,8 +190,6 @@ fn take_tx_output_value(input: &[u8]) -> IResult<&[u8], transaction::Value> {
     // Skip script
     let (input, sig_len) = take_varint_fixed(input)?;
     let (input, _) = take(sig_len)(input)?;
-
-    println!("take_tx_output_value: {}", value);
 
     Ok((input, value))
 }

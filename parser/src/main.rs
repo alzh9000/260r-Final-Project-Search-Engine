@@ -3,5 +3,6 @@ mod transaction;
 
 fn main() {
     println!("Hello, world!");
-    println!("{}", reader::f())
+    let mut p = reader::Matcher::new();
+    println!("{}", p.f())
 }

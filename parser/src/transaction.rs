@@ -1,7 +1,6 @@
 use itertools::Itertools;
-use std::string::String;
-
 use sha2::Digest;
+use std::string::String;
 
 // Note that Hash256 types are stored internally in little-endian! (reverse byte order). This is
 // due to an accident in the original Bitcoin protocol, and we keep it this way for efficiency
@@ -13,15 +12,18 @@ pub fn print_hash(h: &Hash256) -> String {
     format!("{:02x}", h.iter().rev().format(""))
 }
 
+// Value is always denominated in Satoshis. (1e-8 BTC)
+pub type Value = u64;
+
 #[derive(Debug)]
 pub struct Metadata {
     pub id: Hash256,
     pub block: Hash256,
     pub blockheight: u32,
     pub size: u32,
-    pub total_input: u64,  // in Satoshi (1/100M of a Bitcoin)
-    pub total_output: u64, // in Satoshi (1/100M of a Bitcoin)
-    pub fees: u64,         // in Satoshi (1/100M of a Bitcoin)
+    pub total_input: Value,  // in Satoshi (1/100M of a Bitcoin)
+    pub total_output: Value, // in Satoshi (1/100M of a Bitcoin)
+    pub fees: Value,         // in Satoshi (1/100M of a Bitcoin)
 }
 
 #[derive(Debug)]
@@ -33,6 +35,19 @@ pub struct Block {
     pub unix_time: u32,
     pub tx_count: u32,
     pub height: u32,
+}
+
+#[derive(Debug)]
+pub struct Output {
+    pub index: u32,
+    pub value: Value,
+}
+
+#[derive(Debug)]
+pub struct Input {
+    pub source_tx: Hash256,
+    pub source_index: u32,
+    pub value: Option<Value>, // we only store value here as an optimization. It might not be known at the time that we parse the given block, so we use an option. At the end of parsing the data, there should be no inputs with None values.
 }
 
 // TODO: move somewhere else

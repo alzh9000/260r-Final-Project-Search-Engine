@@ -23,28 +23,25 @@ impl Parser {
         }
     }
 
-    pub fn f(&mut self) -> u32 {
+    pub fn parse(&mut self) {
         let file = std::fs::read("/Volumes/SavvyT7Red/BitcoinCore/blocks/blk00000.dat").unwrap();
         let file = file.as_slice();
-        let (input, size) = raw_block_size(file).unwrap();
-        let (input, block) = parse_block_header_and_tx_count(input).unwrap();
 
-        println!("{:#?}", block);
+        let input = file;
+        loop {
+            let (input, _size) = match raw_block_size(input) {
+                Err(e) => return,
+                Ok((i, s)) => (i, s),
+            };
+            let (input, block) = parse_block_header_and_tx_count(input).unwrap();
 
-        let (input, txs) = parse_transactions(input, block.id, block.tx_count.to_usize()).unwrap();
+            println!("{:#?}", block);
 
-        println!("{:#?}", &txs);
+            let (input, txs) =
+                parse_transactions(input, block.id, block.tx_count.to_usize()).unwrap();
 
-        let (input, size) = raw_block_size(input).unwrap();
-        let (input, block) = parse_block_header_and_tx_count(input).unwrap();
-
-        println!("{:#?}", block);
-
-        let (input, txs) = parse_transactions(input, block.id, block.tx_count.to_usize()).unwrap();
-
-        println!("{:#?}", &txs);
-
-        size
+            println!("{:#?}", &txs);
+        }
     }
 }
 

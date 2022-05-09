@@ -7,8 +7,25 @@ use nom::{
     IResult,
 };
 use nom_varint::take_varint;
+use std::collections::HashMap;
+
+#[derive(Debug)]
+pub struct Matcher {
+    unmatched_inputs: HashMap<transaction::Hash256, transaction::Input>,
+    unmatched_outputs: HashMap<transaction::Hash256, transaction::Output>,
+}
+
+impl Matcher {
+    fn new() -> Matcher {
+        Matcher {
+            unmatched_inputs: HashMap::new(),
+            unmatched_outputs: HashMap::new(),
+        }
+    }
+}
 
 pub fn f() -> u32 {
+    let mut matcher = Matcher::new();
     let file = std::fs::read("/Volumes/SavvyT7Red/BitcoinCore/blocks/blk00000.dat").unwrap();
     let file = file.as_slice();
     let (input, size) = raw_block_size(file).unwrap();
@@ -60,3 +77,21 @@ fn parse_block_header_and_tx_count(input: &[u8]) -> IResult<&[u8], transaction::
         },
     ))
 }
+
+fn parse_transaction(input: &[u8]) -> IResult<&[u8], transaction::Metadata> {
+    let (input, version) = le_u32(input)?;
+    let (input, mut input_count) = take_varint(input)?;
+
+    // Need to deal with the optional witness flag in newer protocols versions if it's there. Note
+    // that we don't use nom::combinator::cond to avoid polluting our computed values with None
+    // values.
+    let witnesses_enabled = input_count == 0;
+    if (witnesses_enabled) {
+        let (input, _) = take(1u8)(input)?;
+        let (input, input_count) = take_varint(input)?;
+    } else {
+        // already have the correct input count
+    };
+}
+
+fn take_tx_input(input: &[u8]) -> IResult<&[u8], transaction::Metadata> {}

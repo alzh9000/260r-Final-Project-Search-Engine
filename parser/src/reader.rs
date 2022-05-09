@@ -6,13 +6,13 @@ use nom::{
     sequence::{preceded, tuple},
     IResult,
 };
+use nom_varint::take_varint;
 
 pub fn f() -> u32 {
     let file = std::fs::read("/Volumes/SavvyT7Red/BitcoinCore/blocks/blk00000.dat").unwrap();
     let file = file.as_slice();
     let (input, size) = raw_block_size(file).unwrap();
-    let (_input, header) = take_header(input).unwrap();
-    let (_input, block) = parse_block_header(header).unwrap();
+    let (_input, block) = parse_block_header_and_tx_count(input).unwrap();
 
     println!("{:?}", block);
 
@@ -29,25 +29,23 @@ fn raw_block_size(input: &[u8]) -> IResult<&[u8], u32> {
     preceded(magic, le_u32)(input)
 }
 
-fn take_header(input: &[u8]) -> IResult<&[u8], &[u8]> {
-    take(80u8)(input)
-}
-
 fn take_32_bytes_as_hash(input: &[u8]) -> IResult<&[u8], crate::transaction::Hash256> {
     let (input, data) = take(32u8)(input)?;
     let res: crate::transaction::Hash256 = data.try_into().expect("Wrong length; expected 32");
     Ok((input, res))
 }
 
-// Note that tx_count and height are not correct when this function returns.
-fn parse_block_header(input: &[u8]) -> IResult<&[u8], transaction::Block> {
-    assert_eq!(input.len(), 80);
+// Note that height is not correct when this function returns.
+fn parse_block_header_and_tx_count(input: &[u8]) -> IResult<&[u8], transaction::Block> {
+    let (input, header) = take(80u8)(input)?;
 
     // hash entire header to get the block ID
-    let id = transaction::hash_twice(input);
+    let id = transaction::hash_twice(header);
 
     let mut parser = tuple((le_u32, take_32_bytes_as_hash, take_32_bytes_as_hash, le_u32));
-    let (input, (version, prev_id, merkle_root, unix_time)) = parser(input)?;
+    let (_, (version, prev_id, merkle_root, unix_time)) = parser(header)?;
+    println!("{:?}", &input[..10]);
+    let (input, tx_count) = take_varint(input)?;
 
     Ok((
         input,
@@ -57,7 +55,7 @@ fn parse_block_header(input: &[u8]) -> IResult<&[u8], transaction::Block> {
             prev_block_id: prev_id,
             merkle_root,
             unix_time,
-            tx_count: u32::MAX,
+            tx_count: tx_count.try_into().unwrap(),
             height: u32::MAX,
         },
     ))

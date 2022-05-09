@@ -100,11 +100,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "nom-varint"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f774b58aa68a8a42e28d9072868aad796802b6885d2fb224d298514aa19f40e2"
+dependencies = [
+ "nom",
+]
+
+[[package]]
 name = "parser"
 version = "0.1.0"
 dependencies = [
  "itertools",
  "nom",
+ "nom-varint",
  "sha2",
 ]
 

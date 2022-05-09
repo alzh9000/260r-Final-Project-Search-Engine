@@ -29,7 +29,7 @@ impl Matcher {
         let (input, size) = raw_block_size(file).unwrap();
         let (_input, block) = parse_block_header_and_tx_count(input).unwrap();
 
-        println!("{:?}", block);
+        println!("{:#?}", block);
 
         size
     }

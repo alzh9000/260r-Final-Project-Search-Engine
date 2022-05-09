@@ -32,6 +32,7 @@ pub struct Block {
     pub merkle_root: Hash256,
     pub unix_time: u32,
     pub tx_count: u32,
+    pub height: u32,
 }
 
 // TODO: move somewhere else

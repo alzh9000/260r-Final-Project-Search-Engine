@@ -1,10 +1,10 @@
 use nom::{bytes::complete::tag, complete::take, sequence::preceded, IResult};
-use std::fs::File;
-use std::io::{BufReader, Read};
 
-pub fn f() {
-    // let file = File::open("/Volumes/SavvyT7Red/BitcoinCore/blocks/blk00000.dat")?;
-    // let reader = BufReader::new(file);
+pub fn f() -> u32 {
+    let file = std::fs::read("/Volumes/SavvyT7Red/BitcoinCore/blocks/blk00000.dat").unwrap();
+    let file = file.as_slice();
+    let (_, size) = raw_block_size(file).unwrap();
+    size
 }
 
 fn hex_to_u32(input: &[u8; 4]) -> u32 {

@@ -1,8 +1,8 @@
-mod reader;
+mod parser;
 mod transaction;
 
 fn main() {
     println!("Hello, world!");
-    let mut p = reader::Matcher::new();
+    let mut p = parser::Parser::new();
     println!("{}", p.f())
 }

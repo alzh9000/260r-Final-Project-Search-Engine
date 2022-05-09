@@ -2,7 +2,6 @@ use crate::transaction;
 use nom::{
     bytes::complete::{tag, take},
     combinator::cond,
-    multi::count,
     number::complete::{le_u32, le_u64},
     sequence::{preceded, tuple},
     IResult, ToUsize,
@@ -11,14 +10,14 @@ use nom_varint::take_varint;
 use std::collections::HashMap;
 
 #[derive(Debug)]
-pub struct Matcher {
+pub struct Parser {
     unmatched_inputs: HashMap<transaction::TxHash, Vec<transaction::Input>>,
     unmatched_outputs: HashMap<transaction::TxHash, Vec<transaction::Input>>,
 }
 
-impl Matcher {
-    pub fn new() -> Matcher {
-        Matcher {
+impl Parser {
+    pub fn new() -> Parser {
+        Parser {
             unmatched_inputs: HashMap::new(),
             unmatched_outputs: HashMap::new(),
         }

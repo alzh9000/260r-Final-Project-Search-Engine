@@ -157,7 +157,7 @@ impl Parser {
             id: id.into(),
             version,
             block: block.id,
-            blockheight: block.height,
+            block_height: block.height,
             size,
         };
 

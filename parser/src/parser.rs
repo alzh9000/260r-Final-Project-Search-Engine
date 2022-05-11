@@ -78,6 +78,7 @@ impl Parser {
             // "/Volumes/SavvyT7Red/BitcoinCore/blocks/blk00000.dat",
             "/Users/savvy/Library/CloudStorage/GoogleDrive-sraghuvanshi@college.harvard.edu/My Drive/CS 260r/Sample bitcoin data/blk00000.dat"
         ));
+        self.finalize();
     }
 
     // Note that height is not correct when this function returns.
@@ -229,6 +230,15 @@ impl Parser {
                 });
                 self.unmatched_inputs.remove(&key);
             }
+        }
+    }
+
+    fn finalize(&mut self) {
+        for u in self.unmatched_outputs.values() {
+            (self.drain_iopair)(InputOutputPair {
+                source: *u,
+                dest: None,
+            });
         }
     }
 }

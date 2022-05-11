@@ -16,7 +16,6 @@ struct OutputHashAndIndex {
     index: u32,
 }
 
-#[derive(Debug)]
 pub struct Parser {
     // The key is the expected src transaction hash and index corresponding to the input.
     unmatched_inputs: HashMap<OutputHashAndIndex, transaction::Input>,
@@ -25,24 +24,24 @@ pub struct Parser {
 
     // The drain_* family of functions is called on an item whenever it is successfully and fully
     // parsed.
-    drain_tx: fn(Transaction),
-    drain_block: fn(Block),
-    drain_iopair: fn(InputOutputPair),
+    drain_tx: Box<dyn FnMut(Transaction)>,
+    drain_block: Box<dyn FnMut(Block)>,
+    drain_iopair: Box<dyn FnMut(InputOutputPair)>,
 }
 
 impl Parser {
     pub fn new(
-        drain_tx: fn(Transaction),
-        drain_block: fn(Block),
-        drain_iopair: fn(InputOutputPair),
+        drain_tx: impl FnMut(Transaction) + 'static,
+        drain_block: impl FnMut(Block) + 'static,
+        drain_iopair: impl FnMut(InputOutputPair) + 'static,
     ) -> Parser {
         Parser {
             unmatched_inputs: HashMap::new(),
             unmatched_outputs: HashMap::new(),
 
-            drain_tx,
-            drain_block,
-            drain_iopair,
+            drain_tx: Box::new(drain_tx),
+            drain_block: Box::new(drain_block),
+            drain_iopair: Box::new(drain_iopair),
         }
     }
 

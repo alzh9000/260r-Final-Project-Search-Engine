@@ -80,7 +80,10 @@ pub struct Output {
 pub struct Input {
     pub source_tx: TxHash,
     pub source_index: u32,
-    pub value: Option<Value>, // we only store value here as an optimization. It might not be known at the time that we parse the given block, so we use an option. At the end of parsing the data, there should be no inputs with None values.
+    pub value: Option<Value>, // we only store value here as an optimization. It might not be known
+                              // at the time that we parse the given block, so we use an option. At
+                              // the end of parsing the data, there should be no inputs with None
+                              // values.
 }
 
 // TODO: move somewhere else

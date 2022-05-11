@@ -1,5 +1,6 @@
 use duplicate::duplicate;
 use itertools::Itertools;
+use rusqlite::types::ToSqlOutput;
 use std::fmt;
 use std::hash::Hash;
 use std::string::String;
@@ -37,6 +38,12 @@ impl std::convert::From<[u8; 32]> for T {
 impl std::convert::AsRef<[u8; 32]> for T {
     fn as_ref(&self) -> &[u8; 32] {
         &self.0
+    }
+}
+
+impl rusqlite::ToSql for T {
+    fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
+        Ok(ToSqlOutput::from(self.0.iter().as_slice()))
     }
 }
 

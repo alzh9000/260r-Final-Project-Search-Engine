@@ -55,7 +55,7 @@ pub struct Transaction {
     pub id: TxHash,
     pub version: u32,
     pub block: BlockHash,
-    pub blockheight: u32,
+    pub block_height: u32,
     pub size: u32,
 }
 

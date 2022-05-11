@@ -74,10 +74,18 @@ impl Parser {
     }
 
     pub fn parse(&mut self) {
-        self.parse_file(Path::new(
-            // "/Volumes/SavvyT7Red/BitcoinCore/blocks/blk00000.dat",
-            "/Users/savvy/Library/CloudStorage/GoogleDrive-sraghuvanshi@college.harvard.edu/My Drive/CS 260r/Sample bitcoin data/blk00000.dat"
-        ));
+        let mut files: Vec<String> = vec![];
+
+        for i in 0..100 {
+            files.push(format!(
+                "/Volumes/SavvyT7Red/BitcoinCore/blocks/blk{:05}.dat",
+                i
+            ));
+        }
+
+        for i in files.iter() {
+            self.parse_file(Path::new(i));
+        }
         self.finalize();
     }
 

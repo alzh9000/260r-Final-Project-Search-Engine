@@ -1,4 +1,4 @@
-use crate::transaction;
+use crate::transaction::{self, Block, Input, InputOutputPair, Output, Transaction, TxHash};
 use nom::{
     bytes::complete::{tag, take},
     combinator::cond,
@@ -6,48 +6,235 @@ use nom::{
     sequence::{preceded, tuple},
     IResult, ToUsize,
 };
+use sha2::Digest;
 use std::collections::HashMap;
+use std::path::Path;
+
+#[derive(Debug, PartialEq, Eq, Hash)]
+struct OutputHashAndIndex {
+    tx: TxHash,
+    index: u32,
+}
 
 #[derive(Debug)]
 pub struct Parser {
-    unmatched_inputs: HashMap<transaction::TxHash, Vec<transaction::Input>>,
-    unmatched_outputs: HashMap<transaction::TxHash, Vec<transaction::Input>>,
+    // The key is the expected src transaction hash and index corresponding to the input.
+    unmatched_inputs: HashMap<OutputHashAndIndex, transaction::Input>,
+    // The key is the source tx and index of the output.
+    unmatched_outputs: HashMap<OutputHashAndIndex, transaction::Output>,
+
+    // The drain_* family of functions is called on an item whenever it is successfully and fully
+    // parsed.
+    drain_tx: fn(Transaction),
+    drain_block: fn(Block),
+    drain_iopair: fn(InputOutputPair),
 }
 
 impl Parser {
-    pub fn new() -> Parser {
+    pub fn new(
+        drain_tx: fn(Transaction),
+        drain_block: fn(Block),
+        drain_iopair: fn(InputOutputPair),
+    ) -> Parser {
         Parser {
             unmatched_inputs: HashMap::new(),
             unmatched_outputs: HashMap::new(),
+
+            drain_tx,
+            drain_block,
+            drain_iopair,
         }
     }
 
-    pub fn parse(&mut self) {
-        let file = std::fs::read("/Volumes/SavvyT7Red/BitcoinCore/blocks/blk00000.dat").unwrap();
+    pub fn parse_file(&mut self, path: &Path) {
+        let file = std::fs::read(path).unwrap();
         let file = file.as_slice();
 
         let mut input = file;
         let mut count = 0;
         loop {
-            let cur_input = match raw_block_size(input) {
+            input = match take_raw_block_size(input) {
                 Err(_e) => return,
                 Ok((_i, 0)) => return,
                 Ok((i, _s)) => i,
             };
-            let (cur_input, block) = parse_block_header_and_tx_count(cur_input).unwrap();
 
-            let (cur_input, txs) =
-                parse_transactions(cur_input, block.id, block.tx_count.to_usize()).unwrap();
+            let block: Block;
+            let txs: Vec<Transaction>;
 
-            println!("{}", count);
+            (input, block) = self.parse_block_header_and_tx_count(input).unwrap();
+            (self.drain_block)(block);
+            (input, txs) = self.parse_transactions(input, &block).unwrap();
+            for t in txs.into_iter() {
+                (self.drain_tx)(t);
+            }
+
+            println!("Blocks parsed: {}", count);
             count += 1;
+        }
+    }
 
-            input = cur_input;
+    pub fn parse(&mut self) {
+        self.parse_file(Path::new(
+            // "/Volumes/SavvyT7Red/BitcoinCore/blocks/blk00000.dat",
+            "/Users/savvy/Library/CloudStorage/GoogleDrive-sraghuvanshi@college.harvard.edu/My Drive/CS 260r/Sample bitcoin data/blk00000.dat"
+        ));
+    }
+
+    // Note that height is not correct when this function returns.
+    fn parse_block_header_and_tx_count<'a, 'b>(
+        &'a mut self,
+        input: &'b [u8],
+    ) -> IResult<&'b [u8], transaction::Block> {
+        let (input, header) = take(80u8)(input)?;
+
+        // hash entire header to get the block ID
+        let id = hash_twice(header);
+
+        let mut parser = tuple((le_u32, take_32_bytes_as_hash, take_32_bytes_as_hash, le_u32));
+        let (_, (version, prev_id, merkle_root, unix_time)) = parser(header)?;
+        let (input, tx_count) = take_varint_fixed(input)?;
+
+        Ok((
+            input,
+            transaction::Block {
+                id: id.into(),
+                version,
+                prev_block_id: prev_id.into(),
+                merkle_root: merkle_root.into(),
+                unix_time,
+                tx_count: tx_count.try_into().unwrap(),
+                height: u32::MAX,
+            },
+        ))
+    }
+
+    fn parse_transaction<'a, 'b>(
+        &mut self,
+        input: &'a [u8],
+        block: &'b transaction::Block,
+    ) -> IResult<&'a [u8], transaction::Transaction> {
+        // Save original input so we can hash everything later
+        let orig_input = input;
+
+        let (input, version) = le_u32(input)?;
+        let (input, input_count) = take_varint_fixed(input)?;
+
+        // Need to deal with the optional witness flag in newer protocols versions if it's there.
+        let witnesses_enabled = input_count == 0;
+        let (input, input_count) =
+            match cond(witnesses_enabled, tuple((take(1u8), take_varint_fixed)))(input)? {
+                (_i, None) => (input, input_count),
+                (i, Some((_, s))) => (i, s),
+            };
+
+        // Take the raw data from the inputs and outputs
+        let (input, tx_input_sources) =
+            nom::multi::count(take_tx_input, input_count.to_usize())(input)?;
+        let (input, output_count) = take_varint_fixed(input)?;
+        let (input, tx_output_values) =
+            nom::multi::count(|x| take_tx_output_value(x), output_count.to_usize())(input)?;
+
+        // Skip witnesses if we need to
+        let input = match cond(witnesses_enabled, |x| {
+            skip_witnesses(x, input_count.to_usize())
+        })(input)?
+        {
+            (_i, None) => input,
+            (i, Some(_)) => i,
+        };
+
+        // Skip the locktime field
+        let (input, _) = le_u32(input)?;
+
+        // Compute size and hash
+        let size = input.as_ptr() as usize - orig_input.as_ptr() as usize;
+        let id = hash_twice(&orig_input[..size]);
+        let size = size as u32;
+
+        // Compute resulting transaction
+        let result = transaction::Transaction {
+            id: id.into(),
+            version,
+            block: block.id,
+            blockheight: block.height,
+            size,
+        };
+
+        // For each output and input, register what we parsed
+        for (i, v) in tx_output_values.into_iter().enumerate() {
+            self.register_output(Output {
+                src_tx: id.into(),
+                src_index: i.try_into().unwrap(),
+                value: v,
+            })
+        }
+
+        for (i, v) in tx_input_sources.into_iter().enumerate() {
+            self.register_input(
+                Input {
+                    dest_tx: id.into(),
+                    dest_index: i.try_into().unwrap(),
+                },
+                v.tx,
+                v.index,
+            )
+        }
+
+        Ok((input, result))
+    }
+
+    fn parse_transactions<'a, 'b>(
+        &mut self,
+        input: &'a [u8],
+        block: &'b transaction::Block,
+    ) -> IResult<&'a [u8], Vec<transaction::Transaction>> {
+        nom::multi::count(
+            |i| self.parse_transaction(i, block),
+            block.tx_count.to_usize(),
+        )(input)
+    }
+
+    fn register_input(&mut self, i: Input, expected_src_tx: TxHash, expected_src_index: u32) {
+        let key = OutputHashAndIndex {
+            tx: expected_src_tx,
+            index: expected_src_index,
+        };
+        match self.unmatched_outputs.get(&key) {
+            None => {
+                self.unmatched_inputs.insert(key, i);
+            }
+            Some(o) => {
+                (self.drain_iopair)(InputOutputPair {
+                    source: *o,
+                    dest: Some(i),
+                });
+                self.unmatched_outputs.remove(&key);
+            }
+        }
+    }
+
+    fn register_output(&mut self, o: Output) {
+        let key = OutputHashAndIndex {
+            tx: o.src_tx,
+            index: o.src_index,
+        };
+        match self.unmatched_inputs.get(&key) {
+            None => {
+                self.unmatched_outputs.insert(key, o);
+            }
+            Some(i) => {
+                (self.drain_iopair)(InputOutputPair {
+                    source: o,
+                    dest: Some(*i),
+                });
+                self.unmatched_inputs.remove(&key);
+            }
         }
     }
 }
 
-fn raw_block_size(input: &[u8]) -> IResult<&[u8], u32> {
+fn take_raw_block_size(input: &[u8]) -> IResult<&[u8], u32> {
     // find magic byte sequence and then pull block size
     let magic: &[u8] = &[0xf9, 0xbe, 0xb4, 0xd9];
     let magic = tag(magic);
@@ -60,115 +247,10 @@ fn take_32_bytes_as_hash(input: &[u8]) -> IResult<&[u8], [u8; 32]> {
     Ok((input, res))
 }
 
-// Note that height is not correct when this function returns.
-fn parse_block_header_and_tx_count(input: &[u8]) -> IResult<&[u8], transaction::Block> {
-    let (input, header) = take(80u8)(input)?;
-
-    // hash entire header to get the block ID
-    let id = transaction::hash_twice(header);
-
-    let mut parser = tuple((le_u32, take_32_bytes_as_hash, take_32_bytes_as_hash, le_u32));
-    let (_, (version, prev_id, merkle_root, unix_time)) = parser(header)?;
-    let (input, tx_count) = take_varint_fixed(input)?;
-
-    Ok((
-        input,
-        transaction::Block {
-            id: id.into(),
-            version,
-            prev_block_id: prev_id.into(),
-            merkle_root: merkle_root.into(),
-            unix_time,
-            tx_count: tx_count.try_into().unwrap(),
-            height: u32::MAX,
-        },
-    ))
-}
-
-fn parse_transactions(
-    input: &[u8],
-    block: transaction::BlockHash,
-    tx_count: usize,
-) -> IResult<&[u8], Vec<transaction::Transaction>> {
-    nom::multi::count(|i| parse_transaction(i, block), tx_count)(input)
-}
-
-fn parse_transaction(
-    input: &[u8],
-    block: transaction::BlockHash,
-) -> IResult<&[u8], transaction::Transaction> {
-    // Save original input so we can hash everything later
-    let orig_input = input;
-
-    let (input, version) = le_u32(input)?;
-    let (input, input_count) = take_varint_fixed(input)?;
-
-    // Need to deal with the optional witness flag in newer protocols versions if it's there.
-    let witnesses_enabled = input_count == 0;
-    let (input, input_count) =
-        match cond(witnesses_enabled, tuple((take(1u8), take_varint_fixed)))(input)? {
-            (_i, None) => (input, input_count),
-            (i, Some((_, s))) => (i, s),
-        };
-
-    let (input, (tx_inputs, tx_outputs)) =
-        take_tx_inputs_and_outputs(input, input_count.to_usize())?;
-
-    let input = match cond(witnesses_enabled, |x| {
-        skip_witnesses(x, input_count.to_usize())
-    })(input)?
-    {
-        (_i, None) => input,
-        (i, Some(_)) => i,
-    };
-
-    // Skip the locktime field
-    let (input, _) = le_u32(input)?;
-
-    let size = input.as_ptr() as usize - orig_input.as_ptr() as usize;
-    let id = transaction::hash_twice(&orig_input[..size]);
-    let size = size as u32;
-
-    // TODO: correctly calculate blockheight
-    let result = transaction::Transaction {
-        id: id.into(),
-        version,
-        block,
-        blockheight: u32::MAX,
-        size,
-    };
-
-    Ok((input, result))
-}
-
-fn take_tx_inputs_and_outputs(
-    input: &[u8],
-    input_count: usize,
-) -> IResult<&[u8], (Vec<transaction::Input>, Vec<transaction::Output>)> {
-    let (input, tx_inputs) = nom::multi::count(take_tx_input, input_count)(input)?;
-
-    let (input, output_count) = take_varint_fixed(input)?;
-
-    let (input, tx_output_values) =
-        nom::multi::count(|x| take_tx_output_value(x), output_count.to_usize())(input)?;
-
-    let tx_outputs = tx_output_values
-        .iter()
-        .scan(0, |index, &x| {
-            let cur_index = *index;
-            *index += 1;
-            Some(transaction::Output {
-                index: cur_index,
-                value: x,
-            })
-        })
-        .collect();
-
-    Ok((input, (tx_inputs, tx_outputs)))
-}
-
-fn take_tx_input(input: &[u8]) -> IResult<&[u8], transaction::Input> {
-    let (input, (source_tx, source_index)) = tuple((take_32_bytes_as_hash, le_u32))(input)?;
+// returns a source transaction and index. The index (and tx hash) of the input itself
+// will be taken care of by the calling function.
+fn take_tx_input(input: &[u8]) -> IResult<&[u8], OutputHashAndIndex> {
+    let (input, (src_tx, src_index)) = tuple((take_32_bytes_as_hash, le_u32))(input)?;
 
     // Skip script and sequence number
     let (input, sig_len) = take_varint_fixed(input)?;
@@ -176,12 +258,13 @@ fn take_tx_input(input: &[u8]) -> IResult<&[u8], transaction::Input> {
 
     let (input, _) = take(amt_to_skip)(input)?;
 
-    let result = transaction::Input {
-        source_tx: source_tx.into(),
-        source_index,
-        value: None,
-    };
-    Ok((input, result))
+    Ok((
+        input,
+        OutputHashAndIndex {
+            tx: src_tx.into(),
+            index: src_index,
+        },
+    ))
 }
 
 fn take_tx_output_value(input: &[u8]) -> IResult<&[u8], transaction::Value> {

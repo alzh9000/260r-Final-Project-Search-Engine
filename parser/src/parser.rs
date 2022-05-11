@@ -306,9 +306,16 @@ fn take_tx_output_value(input: &[u8]) -> IResult<&[u8], transaction::Value> {
     Ok((input, value))
 }
 
-fn skip_single_witness(input: &[u8]) -> IResult<&[u8], ()> {
+fn skip_single_witness_stack_item(input: &[u8]) -> IResult<&[u8], ()> {
     let (input, len) = take_varint_fixed(input)?;
     let (input, _) = take(len)(input)?;
+    Ok((input, ()))
+}
+
+fn skip_single_witness(input: &[u8]) -> IResult<&[u8], ()> {
+    let (input, stack_count) = take_varint_fixed(input)?;
+    let (input, _) =
+        nom::multi::count(skip_single_witness_stack_item, stack_count.to_usize())(input)?;
     Ok((input, ()))
 }
 

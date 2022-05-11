@@ -220,3 +220,13 @@ fn take_varint_fixed(input: &[u8]) -> IResult<&[u8], u64> {
         return le_u64(input);
     }
 }
+
+// Hash helpers
+
+pub fn hash_once(x: &[u8]) -> transaction::Hash256 {
+    sha2::Sha256::digest(x).into()
+}
+
+pub fn hash_twice(x: &[u8]) -> transaction::Hash256 {
+    hash_once(&hash_once(x))
+}

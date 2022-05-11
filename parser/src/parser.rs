@@ -27,6 +27,8 @@ pub struct Parser {
     drain_tx: Box<dyn FnMut(Transaction)>,
     drain_block: Box<dyn FnMut(Block)>,
     drain_iopair: Box<dyn FnMut(InputOutputPair)>,
+
+    blocks_parsed: u64,
 }
 
 impl Parser {
@@ -42,6 +44,8 @@ impl Parser {
             drain_tx: Box::new(drain_tx),
             drain_block: Box::new(drain_block),
             drain_iopair: Box::new(drain_iopair),
+
+            blocks_parsed: 0,
         }
     }
 
@@ -50,7 +54,6 @@ impl Parser {
         let file = file.as_slice();
 
         let mut input = file;
-        let mut count = 0;
         loop {
             input = match take_raw_block_size(input) {
                 Err(_e) => return,
@@ -68,8 +71,10 @@ impl Parser {
                 (self.drain_tx)(t);
             }
 
-            println!("Blocks parsed: {}", count);
-            count += 1;
+            self.blocks_parsed += 1;
+            if self.blocks_parsed % 500 == 0 {
+                println!("Blocks parsed: {}", self.blocks_parsed);
+            }
         }
     }
 
@@ -83,8 +88,9 @@ impl Parser {
             ));
         }
 
-        for i in files.iter() {
-            self.parse_file(Path::new(i));
+        for (i, f) in files.iter().enumerate() {
+            println!("Parsing file {} of {}...", i, files.len());
+            self.parse_file(Path::new(f));
         }
         self.finalize();
     }

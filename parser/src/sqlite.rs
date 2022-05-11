@@ -6,6 +6,10 @@ pub fn initialize() -> Connection {
     let connection = rusqlite::Connection::open("btc-test.db").unwrap();
 
     connection
+        .pragma_update(None, "journal_mode", "memory")
+        .unwrap();
+
+    connection
         .execute(
             "
         CREATE TABLE transactions (

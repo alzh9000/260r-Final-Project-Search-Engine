@@ -89,14 +89,14 @@ fn parse_transactions(
     input: &[u8],
     block: transaction::BlockHash,
     tx_count: usize,
-) -> IResult<&[u8], Vec<transaction::Metadata>> {
+) -> IResult<&[u8], Vec<transaction::Transaction>> {
     nom::multi::count(|i| parse_transaction(i, block), tx_count)(input)
 }
 
 fn parse_transaction(
     input: &[u8],
     block: transaction::BlockHash,
-) -> IResult<&[u8], transaction::Metadata> {
+) -> IResult<&[u8], transaction::Transaction> {
     // Save original input so we can hash everything later
     let orig_input = input;
 
@@ -130,7 +130,7 @@ fn parse_transaction(
     let size = size as u32;
 
     // TODO: correctly calculate blockheight
-    let result = transaction::Metadata {
+    let result = transaction::Transaction {
         id: id.into(),
         version,
         block,

@@ -51,7 +51,7 @@ fn print_hash(h: &Hash256) -> String {
 pub type Value = u64;
 
 #[derive(Debug)]
-pub struct Metadata {
+pub struct Transaction {
     pub id: TxHash,
     pub version: u32,
     pub block: BlockHash,

@@ -10,6 +10,10 @@ pub fn initialize() -> Connection {
         .unwrap();
 
     connection
+        .pragma_update(None, "synchronous", "off")
+        .unwrap();
+
+    connection
         .execute(
             "
         CREATE TABLE transactions (

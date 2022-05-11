@@ -12,29 +12,29 @@ pub type Hash256 = [u8; 32];
 // Define distinct hash types to avoid mixing them up accidentally. But keep the same
 // implementations of all three.
 duplicate! {
-    [ name; [TxHash]; [BlockHash]; [MerkleRoot] ]
+    [ T; [TxHash]; [BlockHash]; [MerkleRoot] ]
 #[derive(Clone, Copy, PartialEq, Hash, Eq)]
-pub struct name(Hash256);
+pub struct T(Hash256);
 
-impl fmt::Debug for name {
+impl fmt::Debug for T {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", print_hash(&self.0))
     }
 }
 
-impl name {
-    pub fn new(data: [u8; 32]) -> name {
-        name{0: data}
+impl T {
+    pub fn new(data: [u8; 32]) -> T {
+        T{0: data}
     }
 }
 
-impl std::convert::From<[u8; 32]> for name {
-    fn from(data: [u8; 32]) -> name {
-        name{ 0: data }
+impl std::convert::From<[u8; 32]> for T {
+    fn from(data: [u8; 32]) -> T {
+        T{ 0: data }
     }
 }
 
-impl std::convert::AsRef<[u8; 32]> for name {
+impl std::convert::AsRef<[u8; 32]> for T {
     fn as_ref(&self) -> &[u8; 32] {
         &self.0
     }

@@ -92,6 +92,7 @@ impl Parser {
             println!("Parsing file {} of {}...", i, files.len());
             self.parse_file(Path::new(f));
         }
+
         self.finalize();
     }
 
@@ -248,6 +249,11 @@ impl Parser {
     }
 
     fn finalize(&mut self) {
+        println!(
+            "Finalizing! Writing {} tx outputs without corresponding inputs into the database",
+            self.unmatched_outputs.len(),
+        );
+
         for u in self.unmatched_outputs.values() {
             (self.drain_iopair)(InputOutputPair {
                 source: *u,

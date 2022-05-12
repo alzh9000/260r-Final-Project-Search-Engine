@@ -68,7 +68,7 @@ impl SQLiteDriver {
 }
 
 impl OutputWriter for SQLiteDriver {
-    fn insert_tx(&self, tx: Transaction) {
+    fn insert_tx(&mut self, tx: Transaction) {
         self.conn
             .execute(
                 "INSERT INTO transactions VALUES (?1, ?2, ?3, ?4, ?5);",
@@ -77,7 +77,7 @@ impl OutputWriter for SQLiteDriver {
             .unwrap();
     }
 
-    fn insert_block(&self, b: Block) {
+    fn insert_block(&mut self, b: Block) {
         self.conn
             .execute(
                 "INSERT INTO blocks VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7);",
@@ -94,7 +94,7 @@ impl OutputWriter for SQLiteDriver {
             .unwrap();
     }
 
-    fn insert_iopair(&self, iopair: InputOutputPair) {
+    fn insert_iopair(&mut self, iopair: InputOutputPair) {
         let dest_tx = match iopair.dest {
             None => None,
             Some(d) => Some(d.dest_tx),

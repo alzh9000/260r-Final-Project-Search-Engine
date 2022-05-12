@@ -8,3 +8,4 @@ blocktools_py3/*.dat
 *.dat
 Sample bitcoin data/
 *.zip
+**/.DS_Store

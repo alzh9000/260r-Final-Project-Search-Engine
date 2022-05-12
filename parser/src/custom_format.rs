@@ -3,9 +3,9 @@ use crate::{
     transaction::{Block, InputOutputPair, Transaction},
 };
 use bincode::serialize_into;
-use serde::{de::DeserializeOwned, Deserialize};
+use serde::de::DeserializeOwned;
+use std::fs::File;
 use std::io::BufWriter;
-use std::{fs::File, io::ErrorKind};
 
 const TRANSACTION_DBFILE: &'static str = "transactions.customdb";
 const BLOCK_DBFILE: &'static str = "blocks.customdb";

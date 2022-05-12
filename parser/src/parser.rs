@@ -84,7 +84,7 @@ impl Parser {
         }
 
         for (i, f) in files.iter().enumerate() {
-            println!("Parsing file {} of {}...", i, files.len());
+            println!("Parsing file {} of {}...: {}", i, files.len(), &f);
             self.parse_file(Path::new(f));
         }
 

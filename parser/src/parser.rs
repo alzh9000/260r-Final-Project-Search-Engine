@@ -23,7 +23,7 @@ pub struct Parser {
     // The key is the expected src transaction hash and index corresponding to the input.
     unmatched_inputs: HashMap<OutputHashAndIndex, transaction::Input>,
     // The key is the source tx and index of the output.
-    unmatched_outputs: HashMap<OutputHashAndIndex, transaction::Output>,
+    unmatched_outputs: HashMap<OutputHashAndIndex, transaction::Value>,
 
     // The drainer's relevant function is called on an item whenever it is successfully and fully
     // parsed.
@@ -214,9 +214,13 @@ impl Parser {
             None => {
                 self.unmatched_inputs.insert(key, i);
             }
-            Some(o) => {
+            Some(output_val) => {
                 self.drainer.insert_iopair(InputOutputPair {
-                    source: *o,
+                    source: Output {
+                        src_tx: expected_src_tx,
+                        src_index: expected_src_index,
+                        value: *output_val,
+                    },
                     dest: Some(i),
                 });
                 self.unmatched_outputs.remove(&key);
@@ -231,7 +235,7 @@ impl Parser {
         };
         match self.unmatched_inputs.get(&key) {
             None => {
-                self.unmatched_outputs.insert(key, o);
+                self.unmatched_outputs.insert(key, o.value);
             }
             Some(i) => {
                 self.drainer.insert_iopair(InputOutputPair {
@@ -249,9 +253,13 @@ impl Parser {
             self.unmatched_outputs.len(),
         );
 
-        for u in self.unmatched_outputs.values() {
+        for (k, v) in self.unmatched_outputs.iter() {
             self.drainer.insert_iopair(InputOutputPair {
-                source: *u,
+                source: Output {
+                    src_tx: k.tx,
+                    src_index: k.index,
+                    value: *v,
+                },
                 dest: None,
             });
         }

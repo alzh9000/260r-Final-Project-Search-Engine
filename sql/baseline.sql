@@ -11,7 +11,8 @@
 -- LIMIT 5;
 
 -- EXPLAIN QUERY PLAN
+
 SELECT *
 FROM input_output_pairs
-WHERE input_output_pairs.value = 3342000000
-LIMIT 5;
+WHERE input_output_pairs.src_tx='��v�y��|�WX�bR_��zh2�b	]T�c�tsC'
+LIMIT 500;

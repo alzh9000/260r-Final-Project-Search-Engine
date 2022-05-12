@@ -1,3 +1,4 @@
+mod custom_format;
 mod output_writer;
 mod parser;
 mod sqlite;

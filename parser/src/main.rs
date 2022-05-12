@@ -17,5 +17,5 @@ fn main() {
 
     let mut p = parser::Parser::new(&mut custom_drainer);
 
-    p.parse();
+    p.parse(1);
 }

@@ -73,10 +73,10 @@ impl<'p> Parser<'p> {
         }
     }
 
-    pub fn parse(&mut self) {
+    pub fn parse(&mut self, num_files: u32) {
         let mut files: Vec<String> = vec![];
 
-        for i in 0..1 {
+        for i in 0..num_files {
             files.push(format!(
                 "/Volumes/SavvyT7Red/BitcoinCore/blocks/blk{:05}.dat",
                 i

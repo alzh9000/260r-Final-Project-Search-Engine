@@ -1,2 +1,0 @@
-,Tx Version,Lock Time,Inputs,Outputs,Tx Out Index,Script Length,Sequence,Value,Script Len,Pubkey OP_CODE,Pure Pubkey,ScriptPubkey
-0,1,0,1,1,ffffffff Coinbase with special index,7,4294967295,5000000000,67,None Bytes:65 tail_op_code:OP_CHECKSIG ,0495b091c6a47ccbc77c2af02dd975dcce14c895894df4de90c94066f72144751967058480aa91b33d9d972c13d5605d29ece6a4d1abb355576c988302f0bad2ed,410495b091c6a47ccbc77c2af02dd975dcce14c895894df4de90c94066f72144751967058480aa91b33d9d972c13d5605d29ece6a4d1abb355576c988302f0bad2edac

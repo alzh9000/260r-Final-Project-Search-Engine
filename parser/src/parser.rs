@@ -76,7 +76,7 @@ impl Parser {
     pub fn parse(&mut self) {
         let mut files: Vec<String> = vec![];
 
-        for i in 0..373 {
+        for i in 0..1 {
             files.push(format!(
                 "/Volumes/SavvyT7Red/BitcoinCore/blocks/blk{:05}.dat",
                 i

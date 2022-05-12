@@ -1,4 +1,7 @@
-use crate::transaction::{self, Block, Input, InputOutputPair, Output, Transaction, TxHash};
+use crate::{
+    output_writer::OutputWriter,
+    transaction::{self, Block, Input, InputOutputPair, Output, Transaction, TxHash},
+};
 use nom::{
     bytes::complete::{tag, take},
     combinator::cond,
@@ -22,28 +25,20 @@ pub struct Parser {
     // The key is the source tx and index of the output.
     unmatched_outputs: HashMap<OutputHashAndIndex, transaction::Output>,
 
-    // The drain_* family of functions is called on an item whenever it is successfully and fully
+    // The drainer's relevant function is called on an item whenever it is successfully and fully
     // parsed.
-    drain_tx: Box<dyn FnMut(Transaction)>,
-    drain_block: Box<dyn FnMut(Block)>,
-    drain_iopair: Box<dyn FnMut(InputOutputPair)>,
+    drainer: Box<dyn OutputWriter>,
 
     blocks_parsed: u64,
 }
 
 impl Parser {
-    pub fn new(
-        drain_tx: impl FnMut(Transaction) + 'static,
-        drain_block: impl FnMut(Block) + 'static,
-        drain_iopair: impl FnMut(InputOutputPair) + 'static,
-    ) -> Parser {
+    pub fn new(drainer: Box<dyn OutputWriter>) -> Parser {
         Parser {
             unmatched_inputs: HashMap::new(),
             unmatched_outputs: HashMap::new(),
 
-            drain_tx: Box::new(drain_tx),
-            drain_block: Box::new(drain_block),
-            drain_iopair: Box::new(drain_iopair),
+            drainer,
 
             blocks_parsed: 0,
         }
@@ -65,10 +60,10 @@ impl Parser {
             let txs: Vec<Transaction>;
 
             (input, block) = self.parse_block_header_and_tx_count(input).unwrap();
-            (self.drain_block)(block);
+            self.drainer.insert_block(block);
             (input, txs) = self.parse_transactions(input, &block).unwrap();
             for t in txs.into_iter() {
-                (self.drain_tx)(t);
+                self.drainer.insert_tx(t);
             }
 
             self.blocks_parsed += 1;
@@ -220,7 +215,7 @@ impl Parser {
                 self.unmatched_inputs.insert(key, i);
             }
             Some(o) => {
-                (self.drain_iopair)(InputOutputPair {
+                self.drainer.insert_iopair(InputOutputPair {
                     source: *o,
                     dest: Some(i),
                 });
@@ -239,7 +234,7 @@ impl Parser {
                 self.unmatched_outputs.insert(key, o);
             }
             Some(i) => {
-                (self.drain_iopair)(InputOutputPair {
+                self.drainer.insert_iopair(InputOutputPair {
                     source: o,
                     dest: Some(*i),
                 });
@@ -255,7 +250,7 @@ impl Parser {
         );
 
         for u in self.unmatched_outputs.values() {
-            (self.drain_iopair)(InputOutputPair {
+            self.drainer.insert_iopair(InputOutputPair {
                 source: *u,
                 dest: None,
             });

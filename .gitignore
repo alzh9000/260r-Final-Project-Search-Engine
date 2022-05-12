@@ -6,3 +6,5 @@ blocktools_py3/Savvy Data/*
 blocktools_py3/*.dat
 *.db
 *.dat
+Sample bitcoin data/
+*.zip

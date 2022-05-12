@@ -8,10 +8,10 @@ fn main() {
     println!("Hello, world!");
 
     // Change this type to write output in a different format (e.g. SQLiteDriver, or CustomWriter)
-    let drainer = sqlite::SQLiteDriver::new();
-    let sqlite_driver = Box::new(drainer);
+    let sqlite_connection = rusqlite::Connection::open("btc-test.db").unwrap();
+    let mut drainer = sqlite::SQLiteDriver::new(&sqlite_connection);
 
-    let mut p = parser::Parser::new(sqlite_driver);
+    let mut p = parser::Parser::new(&mut drainer);
 
     p.parse();
 }

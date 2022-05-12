@@ -19,7 +19,7 @@ struct OutputHashAndIndex {
     index: u32,
 }
 
-pub struct Parser {
+pub struct Parser<'p> {
     // The key is the expected src transaction hash and index corresponding to the input.
     unmatched_inputs: HashMap<OutputHashAndIndex, transaction::Input>,
     // The key is the source tx and index of the output.
@@ -27,13 +27,13 @@ pub struct Parser {
 
     // The drainer's relevant function is called on an item whenever it is successfully and fully
     // parsed.
-    drainer: Box<dyn OutputWriter>,
+    drainer: &'p mut dyn OutputWriter,
 
     blocks_parsed: u64,
 }
 
-impl Parser {
-    pub fn new(drainer: Box<dyn OutputWriter>) -> Parser {
+impl<'p> Parser<'p> {
+    pub fn new(drainer: &'p mut dyn OutputWriter) -> Parser<'p> {
         Parser {
             unmatched_inputs: HashMap::new(),
             unmatched_outputs: HashMap::new(),

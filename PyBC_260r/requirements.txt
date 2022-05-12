@@ -1,5 +1,0 @@
-pandas
-numpy
-base58
-tqdm
-requests

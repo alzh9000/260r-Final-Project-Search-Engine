@@ -1,21 +1,27 @@
+use crate::output_writer::OutputWriter;
 use crate::transaction::{Block, InputOutputPair, Transaction};
 use rusqlite::params;
 use rusqlite::Connection;
 
-pub fn initialize() -> Connection {
-    let connection = rusqlite::Connection::open("btc-test.db").unwrap();
+pub struct SQLiteDriver {
+    conn: Connection,
+}
 
-    connection
-        .pragma_update(None, "journal_mode", "memory")
-        .unwrap();
+impl SQLiteDriver {
+    pub fn new() -> SQLiteDriver {
+        let connection = rusqlite::Connection::open("btc-test.db").unwrap();
 
-    connection
-        .pragma_update(None, "synchronous", "off")
-        .unwrap();
+        connection
+            .pragma_update(None, "journal_mode", "memory")
+            .unwrap();
 
-    connection
-        .execute(
-            "
+        connection
+            .pragma_update(None, "synchronous", "off")
+            .unwrap();
+
+        connection
+            .execute(
+                "
         CREATE TABLE transactions (
             id                  BLOB NOT NULL,
             version             UNSIGNED INT4 NOT NULL,
@@ -23,13 +29,13 @@ pub fn initialize() -> Connection {
             block_height        UNSIGNED INT4 NOT NULL,
             size                UNSIGNED INT4 NOT NULL
         );",
-            [],
-        )
-        .unwrap();
+                [],
+            )
+            .unwrap();
 
-    connection
-        .execute(
-            "
+        connection
+            .execute(
+                "
         CREATE TABLE blocks (
             block_hash          BLOB NOT NULL,
             version             UNSIGNED INT4 NOT NULL,
@@ -39,13 +45,13 @@ pub fn initialize() -> Connection {
             tx_count            UNSIGNED INT4 NOT NULL,
             height              UNSIGNED INT4 NOT NULL
         );",
-            [],
-        )
-        .unwrap();
+                [],
+            )
+            .unwrap();
 
-    connection
-        .execute(
-            "
+        connection
+            .execute(
+                "
         CREATE TABLE input_output_pairs (
             src_tx              BLOB NOT NULL,
             src_index           UNSIGNED INT4 NOT NULL,
@@ -53,56 +59,62 @@ pub fn initialize() -> Connection {
             dest_tx             BLOB,
             dest_index          INT4
         );",
-            [],
-        )
-        .unwrap();
+                [],
+            )
+            .unwrap();
 
-    connection
+        SQLiteDriver { conn: connection }
+    }
 }
 
-pub fn insert_tx(conn: &Connection, tx: Transaction) {
-    conn.execute(
-        "INSERT INTO transactions VALUES (?1, ?2, ?3, ?4, ?5);",
-        params![tx.id, tx.version, tx.block, tx.block_height, tx.size],
-    )
-    .unwrap();
-}
+impl OutputWriter for SQLiteDriver {
+    fn insert_tx(&self, tx: Transaction) {
+        self.conn
+            .execute(
+                "INSERT INTO transactions VALUES (?1, ?2, ?3, ?4, ?5);",
+                params![tx.id, tx.version, tx.block, tx.block_height, tx.size],
+            )
+            .unwrap();
+    }
 
-pub fn insert_block(conn: &Connection, b: Block) {
-    conn.execute(
-        "INSERT INTO blocks VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7);",
-        params![
-            b.id,
-            b.version,
-            b.prev_block_id,
-            b.merkle_root,
-            b.unix_time,
-            b.tx_count,
-            b.height
-        ],
-    )
-    .unwrap();
-}
+    fn insert_block(&self, b: Block) {
+        self.conn
+            .execute(
+                "INSERT INTO blocks VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7);",
+                params![
+                    b.id,
+                    b.version,
+                    b.prev_block_id,
+                    b.merkle_root,
+                    b.unix_time,
+                    b.tx_count,
+                    b.height
+                ],
+            )
+            .unwrap();
+    }
 
-pub fn insert_iopair(conn: &Connection, iopair: InputOutputPair) {
-    let dest_tx = match iopair.dest {
-        None => None,
-        Some(d) => Some(d.dest_tx),
-    };
-    let dest_index = match iopair.dest {
-        None => None,
-        Some(d) => Some(d.dest_index),
-    };
+    fn insert_iopair(&self, iopair: InputOutputPair) {
+        let dest_tx = match iopair.dest {
+            None => None,
+            Some(d) => Some(d.dest_tx),
+        };
+        let dest_index = match iopair.dest {
+            None => None,
+            Some(d) => Some(d.dest_index),
+        };
 
-    conn.execute(
-        "INSERT INTO input_output_pairs VALUES (?1, ?2, ?3, ?4, ?5);",
-        params![
-            iopair.source.src_tx,
-            iopair.source.src_index,
-            iopair.source.value,
-            dest_tx,
-            dest_index,
-        ],
-    )
-    .unwrap();
+        self.conn
+            .execute(
+                "INSERT INTO input_output_pairs VALUES (?1, ?2, ?3, ?4, ?5);",
+                params![
+                    iopair.source.src_tx,
+                    iopair.source.src_index,
+                    iopair.source.value,
+                    dest_tx,
+                    dest_index,
+                ],
+            )
+            .unwrap();
+    }
 }

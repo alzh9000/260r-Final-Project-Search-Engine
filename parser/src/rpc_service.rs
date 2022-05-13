@@ -1,14 +1,5 @@
 use crate::transaction::{Block, BlockHash, InputOutputPair, Transaction, TxHash};
 
-use futures::{
-    future::{self, Ready},
-    prelude::*,
-};
-use tarpc::{
-    client, context,
-    server::{self, incoming::Incoming, Channel},
-};
-
 pub const PORT: u16 = 6969;
 
 #[tarpc::service]

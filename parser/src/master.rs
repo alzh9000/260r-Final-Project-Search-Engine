@@ -1,6 +1,7 @@
 use clap::Parser;
 use parser::rpc_service::SearchClient;
 use parser::rpc_service::PORT;
+use parser::transaction::TxHash;
 use std::net::{IpAddr, Ipv4Addr};
 use tarpc::{client, context, tokio_serde::formats::Bincode};
 
@@ -39,8 +40,7 @@ async fn main() -> anyhow::Result<()> {
 
     let results = async move {
         tokio::select! {
-            result1 = clients[0].get_transactions(context::current(), vec![]) => { result1 },
-            result2 = clients[0].get_transactions(context::current(), vec![]) => { result2 },
+            result1 = clients[0].get_transactions(context::current(), vec![TxHash::new_from_str("4a9b10d5769616db54bedec98cb762ac75e26642ae4750f88144c6a9bbb70000")]) => { result1 },
         }
     }
     .await;

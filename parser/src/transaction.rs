@@ -2,6 +2,7 @@ use duplicate::duplicate;
 use itertools::Itertools;
 use rusqlite::types::ToSqlOutput;
 use serde::{Deserialize, Serialize};
+use std::cmp::{Ord, Ordering, PartialOrd};
 use std::fmt;
 use std::hash::Hash;
 use std::string::String;
@@ -15,19 +16,31 @@ pub type Hash256 = [u8; 32];
 // implementations of all three.
 duplicate! {
     [ T; [TxHash]; [BlockHash]; [MerkleRoot] ]
-#[derive(Clone, Copy, PartialEq, Hash, Eq, Serialize, Deserialize, PartialOrd, Ord)]
+#[derive(Clone, Copy, PartialEq, Hash, Eq, Serialize, Deserialize)]
 pub struct T(Hash256);
 
-    impl T {
-        pub fn new_from_str(s: &str) -> T {
-            let s = s.trim();
-            assert_eq!(s.len(), 64);
-            let mut result_bytes: [u8; 32] = [0; 32];
-            hex::decode_to_slice(&s, &mut result_bytes).unwrap();
-            result_bytes.reverse();
-            T(result_bytes.into())
-        }
+impl T {
+    pub fn new_from_str(s: &str) -> T {
+        let s = s.trim();
+        assert_eq!(s.len(), 64);
+        let mut result_bytes: [u8; 32] = [0; 32];
+        hex::decode_to_slice(&s, &mut result_bytes).unwrap();
+        result_bytes.reverse();
+        T(result_bytes.into())
     }
+}
+
+impl Ord for T {
+    fn cmp(&self, other: &T) -> Ordering {
+        self.0.clone().cmp(&other.0.clone())
+    }
+}
+
+impl PartialOrd for T {
+    fn partial_cmp(&self, other: &T) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
 
 impl fmt::Debug for T {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

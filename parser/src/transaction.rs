@@ -80,7 +80,7 @@ pub struct Block {
 
 // We define the following three struct types to denote inputs and outputs of Bitcoin transactions.
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 // An InputOutputPair is a "link" between two transactions. `source` is the parent transaction, and
 // `dest` is the child. Note that source must exist, but dest might not (if the relevant output is
 // unspent).

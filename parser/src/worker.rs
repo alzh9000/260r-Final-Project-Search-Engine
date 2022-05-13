@@ -1,21 +1,155 @@
-use parser::custom_format::{
-    read_custom_format, CustomWriter, BLOCKS_DBFILE_SORTED, IOPAIRS_DBFILE_SORTED_DEST,
-    IOPAIRS_DBFILE_SORTED_SRC, TRANSACTIONS_DBFILE_SORTED,
+use futures::{future, prelude::*};
+use parser::custom_format::load_data_sorted;
+use parser::rpc_service::Search;
+use parser::transaction::{Block, BlockHash, InputOutputPair, Transaction, TxHash};
+use std::net::{IpAddr, Ipv6Addr, SocketAddr};
+use tarpc::{
+    context::Context,
+    server::{self, incoming::Incoming, Channel},
+    tokio_serde::formats::Json,
 };
-use parser::transaction::{Block, InputOutputPair, Transaction};
 
-fn main() {}
+#[derive(Clone)]
+struct SearchWorker {
+    addr: SocketAddr,
 
-fn load_data_sorted() -> (
-    Vec<Transaction>,
-    Vec<Block>,
-    Vec<InputOutputPair>,
-    Vec<InputOutputPair>,
-) {
-    let txs: Vec<Transaction> = read_custom_format(TRANSACTIONS_DBFILE_SORTED);
-    let blocks: Vec<Block> = read_custom_format(BLOCKS_DBFILE_SORTED);
-    let iopairs_sorted_src: Vec<InputOutputPair> = read_custom_format(IOPAIRS_DBFILE_SORTED_SRC);
-    let iopairs_sorted_dest: Vec<InputOutputPair> = read_custom_format(IOPAIRS_DBFILE_SORTED_DEST);
+    txs: Vec<Transaction>,
+    blocks: Vec<Block>,
+    iopairs_sorted_src: Vec<InputOutputPair>,
+    iopairs_sorted_dest: Vec<InputOutputPair>,
+}
 
-    (txs, blocks, iopairs_sorted_src, iopairs_sorted_dest)
+impl SearchWorker {
+    fn new(addr: SocketAddr) -> SearchWorker {
+        let (txs, blocks, iopairs_sorted_src, iopairs_sorted_dest) = load_data_sorted();
+
+        SearchWorker {
+            addr,
+            txs,
+            blocks,
+            iopairs_sorted_src,
+            iopairs_sorted_dest,
+        }
+    }
+}
+
+#[tarpc::server]
+impl Search for SearchWorker {
+    async fn transactions_by_sources(
+        self,
+        _: Context,
+        targets: Vec<TxHash>,
+    ) -> Vec<InputOutputPair> {
+        let mut result: Vec<InputOutputPair> = Vec::new();
+
+        for t in targets.into_iter() {
+            find_elements_in_sorted_vec(
+                &self.iopairs_sorted_src,
+                |x| x.source.src_tx,
+                t,
+                &mut result,
+            );
+        }
+
+        result.sort_unstable_by_key(|k| k.source.src_tx);
+        result.dedup_by_key(|k| k.source.src_tx);
+
+        result
+    }
+
+    async fn transactions_by_destinations(
+        self,
+        _: Context,
+        targets: Vec<TxHash>,
+    ) -> Vec<InputOutputPair> {
+        let mut result: Vec<InputOutputPair> = Vec::new();
+
+        for t in targets.into_iter() {
+            find_elements_in_sorted_vec(
+                &self.iopairs_sorted_dest,
+                |x| x.dest.unwrap().dest_tx, // safe here because iopairs_sorted_dest should not contain any pairs with None destinations!
+                t,
+                &mut result,
+            );
+        }
+
+        result.sort_unstable_by_key(|k| k.dest.unwrap().dest_tx);
+        result.dedup_by_key(|k| k.dest.unwrap().dest_tx);
+
+        result
+    }
+
+    async fn get_transactions(self, _: Context, targets: Vec<TxHash>) -> Vec<Transaction> {
+        let mut result: Vec<Transaction> = Vec::new();
+
+        for t in targets.into_iter() {
+            find_elements_in_sorted_vec(&self.txs, |x| x.id, t, &mut result);
+        }
+
+        result.sort_unstable_by_key(|k| k.id);
+        result.dedup_by_key(|k| k.id);
+
+        result
+    }
+
+    async fn get_blocks(self, _: Context, targets: Vec<BlockHash>) -> Vec<Block> {
+        let mut result: Vec<Block> = Vec::new();
+
+        for t in targets.into_iter() {
+            find_elements_in_sorted_vec(&self.blocks, |x| x.id, t, &mut result);
+        }
+
+        result.sort_unstable_by_key(|k| k.id);
+        result.dedup_by_key(|k| k.id);
+
+        result
+    }
+}
+
+// This function finds the elements `x` in `v` that match `F(x) == y` and appends them to
+// `collector`. Note that `v` must be pre-sorted in such a way that all the elements that match
+// `F(x) == y` must be consecutive, and all of the elements that match `F(x) < y` must be before
+// the elements that match `F(x) == y`.
+fn find_elements_in_sorted_vec<T: Copy, F, Y: Ord>(
+    v: &Vec<T>,
+    f: F,
+    y: Y,
+    collector: &mut Vec<T>,
+) -> ()
+where
+    F: Fn(&T) -> Y,
+{
+    let start_index = v.partition_point(|x| f(x) >= y);
+    let end_index = v.partition_point(|x| f(x) > y);
+
+    for i in start_index..end_index {
+        collector.push(v[i])
+    }
+}
+
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    // TODO: take in a command-line arg or something:
+    let server_addr = (IpAddr::V6(Ipv6Addr::LOCALHOST), 6969);
+
+    let mut listener = tarpc::serde_transport::tcp::listen(&server_addr, Json::default).await?;
+    listener.config_mut().max_frame_length(usize::MAX);
+    listener
+        // Ignore accept errors.
+        .filter_map(|r| future::ready(r.ok()))
+        .map(server::BaseChannel::with_defaults)
+        // Limit channels to 1 per IP.
+        .max_channels_per_key(1, |t| t.transport().peer_addr().unwrap().ip())
+        // serve is generated by the service attribute. It takes as input any type implementing
+        // the generated World trait.
+        .map(|channel| {
+            let server = SearchWorker::new(channel.transport().peer_addr().unwrap());
+            channel.execute(server.serve())
+        })
+        // Max 10 channels.
+        .buffer_unordered(10)
+        .for_each(|_| async {})
+        .await;
+
+    Ok(())
 }

@@ -2,7 +2,7 @@ use duplicate::duplicate;
 use itertools::Itertools;
 use rusqlite::types::ToSqlOutput;
 use serde::{Deserialize, Serialize};
-use std::cmp::{Ord, Ordering, PartialOrd};
+use std::cmp::{Ord, PartialOrd};
 use std::fmt;
 use std::hash::Hash;
 use std::string::String;
@@ -16,7 +16,7 @@ pub type Hash256 = [u8; 32];
 // implementations of all three.
 duplicate! {
     [ T; [TxHash]; [BlockHash]; [MerkleRoot] ]
-#[derive(Clone, Copy, PartialEq, Hash, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, PartialEq, Hash, Eq, Serialize, Deserialize, PartialOrd, Ord)]
 pub struct T(Hash256);
 
 impl T {
@@ -27,18 +27,6 @@ impl T {
         hex::decode_to_slice(&s, &mut result_bytes).unwrap();
         result_bytes.reverse();
         T(result_bytes.into())
-    }
-}
-
-impl Ord for T {
-    fn cmp(&self, other: &T) -> Ordering {
-        self.0.clone().cmp(&other.0.clone())
-    }
-}
-
-impl PartialOrd for T {
-    fn partial_cmp(&self, other: &T) -> Option<Ordering> {
-        Some(self.cmp(other))
     }
 }
 

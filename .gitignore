@@ -10,3 +10,5 @@ Sample bitcoin data/
 *.zip
 **/.DS_Store
 **/*.bak
+*.zip
+target/

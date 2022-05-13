@@ -1,7 +1,7 @@
 use clap::Parser;
 use parser::rpc_service::SearchClient;
 use parser::rpc_service::PORT;
-use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
+use std::net::{IpAddr, Ipv4Addr};
 use tarpc::{client, context, tokio_serde::formats::Bincode};
 
 #[derive(Parser, Debug)]
@@ -18,23 +18,29 @@ async fn main() -> anyhow::Result<()> {
         panic!("Need at least one client!")
     }
 
-    for c in args.client {
-        println!("{:?}", c);
+    let mut clients: Vec<SearchClient> = Vec::new();
+
+    for (i, c) in args.client.iter().enumerate() {
+        println!(
+            "Using client {} with IP address {:?}. Trying to connect... (A hang here means the client is unreachable.)",
+            i, c
+        );
+
+        let transport =
+            tarpc::serde_transport::tcp::connect((IpAddr::V4(*c), PORT), Bincode::default);
+
+        let client = SearchClient::new(client::Config::default(), transport.await?).spawn();
+        clients.push(client);
+
+        println!("Connected to client {} with IP address {:?}.", i, c);
     }
-
-    let transport = tarpc::serde_transport::tcp::connect(
-        (IpAddr::V6(Ipv6Addr::LOCALHOST), PORT),
-        Bincode::default,
-    );
-
-    let client = SearchClient::new(client::Config::default(), transport.await?).spawn();
 
     println!("Master client spawned!");
 
     let results = async move {
         tokio::select! {
-            result1 = client.get_transactions(context::current(), vec![]) => { result1 },
-            result2 = client.get_transactions(context::current(), vec![]) => { result2 },
+            result1 = clients[0].get_transactions(context::current(), vec![]) => { result1 },
+            result2 = clients[0].get_transactions(context::current(), vec![]) => { result2 },
         }
     }
     .await;

@@ -1,13 +1,7 @@
-use crate::custom_format::{
+use parser::custom_format::{
     read_custom_formats, sort_data, CustomWriter, BLOCKS_DBFILE_UNSORTED, IOPAIRS_DBFILE_UNSORTED,
     TRANSACTIONS_DBFILE_UNSORTED,
 };
-
-mod custom_format;
-mod output_writer;
-mod parser;
-mod sqlite;
-mod transaction;
 
 fn main() {
     println!("Hello, world!");

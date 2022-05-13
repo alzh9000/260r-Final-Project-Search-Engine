@@ -12,3 +12,4 @@ Sample bitcoin data/
 **/*.bak
 *.zip
 target/
+*.customdb

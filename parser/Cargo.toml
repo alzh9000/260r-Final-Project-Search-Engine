@@ -5,6 +5,14 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[[bin]]
+name = "search-worker"
+path = "src/worker.rs"
+
+[[bin]] 
+name = "search-master"
+path = "src/master.rs"
+
 [dependencies]
 sha2 = "0.10.2"
 nom = "7"

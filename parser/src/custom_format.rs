@@ -3,9 +3,11 @@ use crate::{
     transaction::{Block, InputOutputPair, Transaction},
 };
 use bincode::serialize_into;
+use cached::proc_macro::once;
 use serde::de::DeserializeOwned;
 use std::fs::File;
 use std::io::BufWriter;
+use std::sync::Arc;
 
 pub const TRANSACTIONS_DBFILE_UNSORTED: &'static str = "transactions.customdb";
 pub const BLOCKS_DBFILE_UNSORTED: &'static str = "blocks.customdb";
@@ -141,16 +143,22 @@ pub fn sort_data() {
     println!("Wrote iopairs sorted by dest tx");
 }
 
+#[once(sync_writes = true)]
 pub fn load_data_sorted() -> (
-    Vec<Transaction>,
-    Vec<Block>,
-    Vec<InputOutputPair>,
-    Vec<InputOutputPair>,
+    Arc<Vec<Transaction>>,
+    Arc<Vec<Block>>,
+    Arc<Vec<InputOutputPair>>,
+    Arc<Vec<InputOutputPair>>,
 ) {
     let txs: Vec<Transaction> = read_custom_format(TRANSACTIONS_DBFILE_SORTED);
     let blocks: Vec<Block> = read_custom_format(BLOCKS_DBFILE_SORTED);
     let iopairs_sorted_src: Vec<InputOutputPair> = read_custom_format(IOPAIRS_DBFILE_SORTED_SRC);
     let iopairs_sorted_dest: Vec<InputOutputPair> = read_custom_format(IOPAIRS_DBFILE_SORTED_DEST);
 
-    (txs, blocks, iopairs_sorted_src, iopairs_sorted_dest)
+    (
+        Arc::new(txs),
+        Arc::new(blocks),
+        Arc::new(iopairs_sorted_src),
+        Arc::new(iopairs_sorted_dest),
+    )
 }

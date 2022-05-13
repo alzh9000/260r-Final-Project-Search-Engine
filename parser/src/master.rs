@@ -1,5 +1,6 @@
 use clap::Parser;
 use parser::rpc_service::SearchClient;
+use parser::rpc_service::PORT;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use tarpc::{client, context, tokio_serde::formats::Bincode};
 
@@ -15,7 +16,7 @@ async fn main() -> anyhow::Result<()> {
     let args = Args::parse();
 
     let transport = tarpc::serde_transport::tcp::connect(
-        (IpAddr::V6(Ipv6Addr::LOCALHOST), 6969),
+        (IpAddr::V6(Ipv6Addr::LOCALHOST), PORT),
         Bincode::default,
     );
 

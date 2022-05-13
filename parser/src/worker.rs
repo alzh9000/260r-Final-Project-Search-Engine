@@ -1,6 +1,6 @@
 use futures::{future, prelude::*};
 use parser::custom_format::load_data_sorted;
-use parser::rpc_service::Search;
+use parser::rpc_service::{Search, PORT};
 use parser::transaction::{Block, BlockHash, InputOutputPair, Transaction, TxHash};
 use std::net::{IpAddr, Ipv6Addr, SocketAddr};
 use std::sync::Arc;
@@ -131,7 +131,7 @@ where
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     // TODO: take in a command-line arg or something:
-    let server_addr = (IpAddr::V6(Ipv6Addr::LOCALHOST), 6969);
+    let server_addr = (IpAddr::V6(Ipv6Addr::LOCALHOST), PORT);
 
     println!("loading data...");
     let _ = load_data_sorted();

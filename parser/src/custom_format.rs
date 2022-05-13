@@ -9,7 +9,7 @@ use std::io::BufWriter;
 
 const TRANSACTION_DBFILE: &'static str = "transactions.customdb";
 const BLOCK_DBFILE: &'static str = "blocks.customdb";
-const IOPAIR_DBFILE: &'static str = "iopair.customdb";
+const IOPAIR_DBFILE: &'static str = "iopairs.customdb";
 
 pub struct CustomWriter {
     tx_writer: BufWriter<std::fs::File>,

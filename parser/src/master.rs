@@ -8,12 +8,19 @@ use tarpc::{client, context, tokio_serde::formats::Bincode};
 #[clap(version)]
 struct Args {
     #[clap(short, long)]
-    clients: Vec<Ipv4Addr>,
+    client: Vec<Ipv4Addr>,
 }
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let args = Args::parse();
+    if args.client.len() < 1 {
+        panic!("Need at least one client!")
+    }
+
+    for c in args.client {
+        println!("{:?}", c);
+    }
 
     let transport = tarpc::serde_transport::tcp::connect(
         (IpAddr::V6(Ipv6Addr::LOCALHOST), PORT),

@@ -18,6 +18,17 @@ duplicate! {
 #[derive(Clone, Copy, PartialEq, Hash, Eq, Serialize, Deserialize, PartialOrd, Ord)]
 pub struct T(Hash256);
 
+    impl T {
+        pub fn new_from_str(s: &str) -> T {
+            let s = s.trim();
+            assert_eq!(s.len(), 64);
+            let mut result_bytes: [u8; 32] = [0; 32];
+            hex::decode_to_slice(&s, &mut result_bytes).unwrap();
+            result_bytes.reverse();
+            T(result_bytes.into())
+        }
+    }
+
 impl fmt::Debug for T {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", print_hash(&self.0))

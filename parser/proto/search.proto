@@ -1,0 +1,73 @@
+syntax = "proto3";
+package search;
+
+service Search {
+    rpc TransactionsBySources (TargetTxHashes) returns (InputOutputPairs);
+    rpc TransactionsByDestinations (TargetTxHashes) returns (InputOutputPairs);
+    rpc GetTransactions (TargetTxHashes) returns (Transactions);
+    rpc GetBlocks (TargetBlockHashes) returns (Blocks);
+}
+
+message TxHash {
+    bytes hash = 1;
+}
+
+message BlockHash {
+    bytes hash = 1;
+}
+
+message MerkleRoot {
+    bytes hash = 1;
+}
+
+message Input {
+    TxHash dest = 1;
+    uint32 dest_index = 2;
+}
+
+message Output {
+    TxHash src = 1;
+    uint32 src_index = 2;
+    uint64 value = 3;
+}
+
+message InputOutputPair {
+    Output source = 1;
+    optional Input dest = 2;
+}
+
+message InputOutputPairs {
+    repeated InputOutputPair iop = 1;
+}
+
+message TargetTxHashes {
+   repeated TxHash target = 1;
+}
+
+message Transaction {
+    TxHash id = 1;
+    uint32 version = 2;
+    BlockHash block = 3;
+    uint32 size = 4;
+}
+
+message Transactions {
+    repeated Transaction t = 1;
+}
+
+message TargetBlockHashes {
+    repeated BlockHash target = 1;
+}
+
+message Block {
+    BlockHash id = 1;
+    uint32 version = 2;
+    BlockHash prev_block_id = 3;
+    MerkleRoot merkle_root = 4;
+    uint64 unix_time = 5;
+    uint32 tx_count = 6;
+}
+
+message Blocks {
+    repeated Block b = 1;
+}

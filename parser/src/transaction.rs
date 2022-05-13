@@ -15,7 +15,7 @@ pub type Hash256 = [u8; 32];
 // implementations of all three.
 duplicate! {
     [ T; [TxHash]; [BlockHash]; [MerkleRoot] ]
-#[derive(Clone, Copy, PartialEq, Hash, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, PartialEq, Hash, Eq, Serialize, Deserialize, PartialOrd, Ord)]
 pub struct T(Hash256);
 
 impl fmt::Debug for T {

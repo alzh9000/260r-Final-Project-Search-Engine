@@ -9,6 +9,8 @@ use tarpc::{
     server::{self, incoming::Incoming, Channel},
 };
 
+pub const PORT: u16 = 6969;
+
 #[tarpc::service]
 pub trait Search {
     async fn transactions_by_sources(targets: Vec<TxHash>) -> Vec<InputOutputPair>;

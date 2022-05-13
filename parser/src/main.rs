@@ -1,4 +1,7 @@
-use crate::custom_format::{read_custom_formats, CustomWriter};
+use crate::custom_format::{
+    read_custom_formats, sort_data, CustomWriter, BLOCKS_DBFILE_UNSORTED, IOPAIRS_DBFILE_UNSORTED,
+    TRANSACTIONS_DBFILE_UNSORTED,
+};
 
 mod custom_format;
 mod output_writer;
@@ -19,8 +22,5 @@ fn main() {
 
     // p.parse(1);
 
-    let (txs, blocks, iopairs) = read_custom_formats();
-
-    println!("{} {} {}", txs.len(), blocks.len(), iopairs.len());
-    println!("{:#?} {:#?} {:#?}", txs[0], blocks[0], iopairs[0]);
+    sort_data();
 }

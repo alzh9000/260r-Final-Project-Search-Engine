@@ -3,20 +3,21 @@ use parser::custom_format::load_data_sorted;
 use parser::rpc_service::Search;
 use parser::transaction::{Block, BlockHash, InputOutputPair, Transaction, TxHash};
 use std::net::{IpAddr, Ipv6Addr, SocketAddr};
+use std::sync::Arc;
+use tarpc::tokio_serde::formats::Bincode;
 use tarpc::{
     context::Context,
     server::{self, incoming::Incoming, Channel},
-    tokio_serde::formats::Json,
 };
 
 #[derive(Clone)]
 struct SearchWorker {
     addr: SocketAddr,
 
-    txs: Vec<Transaction>,
-    blocks: Vec<Block>,
-    iopairs_sorted_src: Vec<InputOutputPair>,
-    iopairs_sorted_dest: Vec<InputOutputPair>,
+    txs: Arc<Vec<Transaction>>,
+    blocks: Arc<Vec<Block>>,
+    iopairs_sorted_src: Arc<Vec<InputOutputPair>>,
+    iopairs_sorted_dest: Arc<Vec<InputOutputPair>>,
 }
 
 impl SearchWorker {
@@ -132,7 +133,13 @@ async fn main() -> anyhow::Result<()> {
     // TODO: take in a command-line arg or something:
     let server_addr = (IpAddr::V6(Ipv6Addr::LOCALHOST), 6969);
 
-    let mut listener = tarpc::serde_transport::tcp::listen(&server_addr, Json::default).await?;
+    println!("loading data...");
+    let _ = load_data_sorted();
+    println!("data loaded...");
+
+    let mut listener = tarpc::serde_transport::tcp::listen(&server_addr, Bincode::default).await?;
+    println!("listener listening!");
+
     listener.config_mut().max_frame_length(usize::MAX);
     listener
         // Ignore accept errors.
@@ -144,6 +151,7 @@ async fn main() -> anyhow::Result<()> {
         // the generated World trait.
         .map(|channel| {
             let server = SearchWorker::new(channel.transport().peer_addr().unwrap());
+            println!("blahhh");
             channel.execute(server.serve())
         })
         // Max 10 channels.

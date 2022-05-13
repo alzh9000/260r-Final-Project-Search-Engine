@@ -54,7 +54,7 @@ impl OutputWriter for CustomWriter {
     }
 }
 
-fn read_custom_format<T: DeserializeOwned>(custom_db_file: &str) -> Vec<T> {
+pub fn read_custom_format<T: DeserializeOwned>(custom_db_file: &str) -> Vec<T> {
     let data = std::fs::read(custom_db_file).unwrap();
     let mut cursor = &data.as_slice()[..];
     let mut vec: Vec<T> = Vec::new();
@@ -85,13 +85,6 @@ pub fn read_custom_formats(
     let txs: Vec<Transaction> = read_custom_format(tx_dbfile);
     let blocks: Vec<Block> = read_custom_format(blocks_dbfile);
     let iopairs: Vec<InputOutputPair> = read_custom_format(iopairs_dbfile);
-
-    println!(
-        "Spare capacities: {} {} {}",
-        txs.capacity() - txs.len(),
-        blocks.capacity() - blocks.len(),
-        iopairs.capacity() - iopairs.len()
-    );
 
     (txs, blocks, iopairs)
 }

@@ -4,8 +4,8 @@ use rusqlite::params;
 use std::cmp::max;
 use tokio::time::Instant;
 
-const THROUGHPUT_NUM_ITERS: usize = 100_000;
-const LATENCY_NUM_ITERS: usize = 100_000;
+const THROUGHPUT_NUM_ITERS: usize = 1_000;
+const LATENCY_NUM_ITERS: usize = 1_000;
 
 pub struct SQLiteTestDriver<'a> {
     random_tx_loader: rusqlite::Statement<'a>,

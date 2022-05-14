@@ -13,3 +13,4 @@ Sample bitcoin data/
 *.zip
 target/
 *.customdb
+data_cache/**

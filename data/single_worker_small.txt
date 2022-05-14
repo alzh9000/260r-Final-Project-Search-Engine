@@ -1,0 +1,43 @@
+loading data...
+data loaded... (435038 tx hashes)
+Using client 0 with IP address 23.99.130.53:6969. Trying to connect... (A hang here means the client is unreachable.)
+Connected to client 0 with address 23.99.130.53:6969.
+Master clients spawned!
+
+Children queries throughput test...
+Children queries throughput test with 100000 iterations took: 67.195628859s
+
+Children queries latency test...
+Children queries latency test with 100000 iterations complete. Statistics:
+Mean latency: 686646.699520001 ns
+Std deviation: 207063.29275492308 ns
+Min latency: 610816 ns
+p25 latency: 640511 ns
+p50 latency: 650239 ns
+p75 latency: 675327 ns
+p90 latency: 732671 ns
+p95 latency: 792575 ns
+p99 latency: 1282047 ns
+p99.9 latency: 3715071 ns
+p99.99 latency: 6115327 ns
+p99.999 latency: 10403839 ns
+Max latency: 13262847 ns
+
+parents queries throughput test...
+parents queries throughput test with 100000 iterations took: 69.274111252s
+
+parents queries latency test...
+parents queries latency test with 100000 iterations complete. Statistics:
+Mean latency: 693936.0307200011 ns
+Std deviation: 245353.89718492367 ns
+Min latency: 605696 ns
+p25 latency: 641023 ns
+p50 latency: 652287 ns
+p75 latency: 674303 ns
+p90 latency: 722431 ns
+p95 latency: 836607 ns
+p99 latency: 1482751 ns
+p99.9 latency: 4276223 ns
+p99.99 latency: 7368703 ns
+p99.999 latency: 9428991 ns
+Max latency: 12410879 ns

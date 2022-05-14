@@ -1,0 +1,39 @@
+loading random transactions to make real queries...
+data loaded... (100000 tx hashes)
+Children queries throughput test...
+Children queries throughput test with 100000 iterations took: 3.506906736s
+
+Children queries latency test...
+Children queries latency test with 100000 iterations complete. Statistics:
+Mean latency: 36065.73392000003 ns
+Std deviation: 63185.21519342133 ns
+Min latency: 16400 ns
+p25 latency: 29311 ns
+p50 latency: 32703 ns
+p75 latency: 36127 ns
+p90 latency: 39711 ns
+p95 latency: 42815 ns
+p99 latency: 95935 ns
+p99.9 latency: 704511 ns
+p99.99 latency: 2003967 ns
+p99.999 latency: 8904703 ns
+Max latency: 8962047 ns
+
+parents queries throughput test...
+parents queries throughput test with 100000 iterations took: 2.64220701s
+
+parents queries latency test...
+parents queries latency test with 100000 iterations complete. Statistics:
+Mean latency: 26951.480319999984 ns
+Std deviation: 7850.660606680986 ns
+Min latency: 9200 ns
+p25 latency: 23407 ns
+p50 latency: 25615 ns
+p75 latency: 28415 ns
+p90 latency: 32207 ns
+p95 latency: 36031 ns
+p99 latency: 55807 ns
+p99.9 latency: 105023 ns
+p99.99 latency: 213887 ns
+p99.999 latency: 316927 ns
+Max latency: 349951 ns

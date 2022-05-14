@@ -1,6 +1,6 @@
 use duplicate::duplicate;
 use itertools::Itertools;
-use rusqlite::types::ToSqlOutput;
+use rusqlite::types::{FromSqlResult, ToSqlOutput, ValueRef};
 use serde::{Deserialize, Serialize};
 use std::cmp::{Ord, PartialOrd};
 use std::fmt;
@@ -57,6 +57,14 @@ impl std::convert::AsRef<[u8; 32]> for T {
 impl rusqlite::ToSql for T {
     fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
         Ok(ToSqlOutput::from(self.0.iter().as_slice()))
+    }
+}
+
+impl rusqlite::types::FromSql for T {
+    fn column_result(value: ValueRef<'_>) -> FromSqlResult<T> {
+        let slice = value.as_blob()?;
+        let slice: [u8; 32] = slice.try_into().map_err(|_| rusqlite::types::FromSqlError::InvalidBlobSize { expected_size: 32, blob_size: slice.len() })?;
+        Ok(T { 0: slice })
     }
 }
 

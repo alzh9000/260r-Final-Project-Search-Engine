@@ -1,6 +1,6 @@
 use crate::{
     output_writer::OutputWriter,
-    transaction::{Block, InputOutputPair, Transaction},
+    transaction::{Block, BlockHash, InputOutputPair, Transaction, TxHash},
 };
 use bincode::serialize_into;
 use cached::proc_macro::once;
@@ -107,8 +107,9 @@ pub fn sort_data() {
     // also use up vectors explicitly (with into_iter) to minimize memory usage, especially when we are sorting
     // larger data.
 
-    txs.sort_unstable_by_key(|k| k.block);
+    txs.sort_unstable_by_key(|k| k.id);
     println!("Sorted transactions");
+
     for t in txs.into_iter() {
         serialize_into(&mut txs_out, &t).unwrap();
     }

@@ -1,8 +1,9 @@
 use futures::{future, prelude::*};
 use parser::custom_format::load_data_sorted;
-use parser::rpc_service::Search;
+use parser::rpc_service::{Search, PORT};
 use parser::transaction::{Block, BlockHash, InputOutputPair, Transaction, TxHash};
-use std::net::{IpAddr, Ipv6Addr, SocketAddr};
+use std::fmt::Debug;
+use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::sync::Arc;
 use tarpc::tokio_serde::formats::Bincode;
 use tarpc::{
@@ -111,7 +112,7 @@ impl Search for SearchWorker {
 // `collector`. Note that `v` must be pre-sorted in such a way that all the elements that match
 // `F(x) == y` must be consecutive, and all of the elements that match `F(x) < y` must be before
 // the elements that match `F(x) == y`.
-fn find_elements_in_sorted_vec<T: Copy, F, Y: Ord>(
+fn find_elements_in_sorted_vec<T: Copy, F, Y: Ord + Debug>(
     v: &Vec<T>,
     f: F,
     y: Y,
@@ -120,8 +121,8 @@ fn find_elements_in_sorted_vec<T: Copy, F, Y: Ord>(
 where
     F: Fn(&T) -> Y,
 {
-    let start_index = v.partition_point(|x| f(x) >= y);
-    let end_index = v.partition_point(|x| f(x) > y);
+    let start_index = v.partition_point(|x| f(x) < y);
+    let end_index = v.partition_point(|x| f(x) <= y);
 
     for i in start_index..end_index {
         collector.push(v[i])
@@ -131,7 +132,7 @@ where
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     // TODO: take in a command-line arg or something:
-    let server_addr = (IpAddr::V6(Ipv6Addr::LOCALHOST), 6969);
+    let server_addr = (IpAddr::V4(Ipv4Addr::LOCALHOST), PORT);
 
     println!("loading data...");
     let _ = load_data_sorted();

@@ -1,9 +1,10 @@
 use crate::{
     output_writer::OutputWriter,
-    transaction::{Block, InputOutputPair, Transaction},
+    transaction::{Block, InputOutputPair, Transaction, TxHash},
 };
 use bincode::serialize_into;
 use cached::proc_macro::once;
+use itertools::Itertools;
 use serde::de::DeserializeOwned;
 use std::fs::File;
 use std::io::BufWriter;
@@ -180,4 +181,9 @@ pub fn load_data_sorted() -> (
         Arc::new(iopairs_sorted_src),
         Arc::new(iopairs_sorted_dest),
     )
+}
+
+pub fn load_tx_ids_sorted() -> Vec<TxHash> {
+    let txs: Vec<Transaction> = read_custom_format(TRANSACTIONS_DBFILE_SORTED);
+    txs.into_iter().map(|x| x.id).collect_vec()
 }

@@ -1,4 +1,5 @@
 use clap::Parser;
+use parser::custom_format::{load_data_sorted, load_tx_ids_sorted};
 use parser::rpc_service::{SearchClient, DEFAULT_PORT};
 use parser::transaction::{BlockHash, InputOutputPair, TxHash};
 use std::net::{IpAddr, Ipv4Addr};
@@ -34,6 +35,11 @@ async fn main() -> anyhow::Result<()> {
         0 => vec![DEFAULT_PORT, args.client.len().try_into().unwrap()],
         _ => args.port,
     };
+
+    // In the master, we load some data so that we can make real queries.
+    println!("loading data...");
+    let txs = load_tx_ids_sorted();
+    println!("data loaded...");
 
     let mut clients: Vec<SearchClient> = Vec::new();
 

@@ -91,17 +91,35 @@ pub fn read_custom_formats(
     (txs, blocks, iopairs)
 }
 
-pub fn sort_data() {
+pub fn sort_and_write_data(for_num_workers: usize) {
+    assert!(for_num_workers >= 1);
+
     let (mut txs, mut blocks, mut iopairs) = read_custom_formats(
         TRANSACTIONS_DBFILE_UNSORTED,
         BLOCKS_DBFILE_UNSORTED,
         IOPAIRS_DBFILE_UNSORTED,
     );
 
-    let mut txs_out = BufWriter::new(File::create(TRANSACTIONS_DBFILE_SORTED).unwrap());
-    let mut blocks_out = BufWriter::new(File::create(BLOCKS_DBFILE_SORTED).unwrap());
-    let mut iopairs_by_src_out = BufWriter::new(File::create(IOPAIRS_DBFILE_SORTED_SRC).unwrap());
-    let mut iopairs_by_dest_out = BufWriter::new(File::create(IOPAIRS_DBFILE_SORTED_DEST).unwrap());
+    let mut txs_out: Vec<BufWriter<std::fs::File>> = Vec::with_capacity(for_num_workers);
+    let mut blocks_out: Vec<BufWriter<std::fs::File>> = Vec::with_capacity(for_num_workers);
+    let mut iopairs_by_src_out: Vec<BufWriter<std::fs::File>> = Vec::with_capacity(for_num_workers);
+    let mut iopairs_by_dest_out: Vec<BufWriter<std::fs::File>> =
+        Vec::with_capacity(for_num_workers);
+
+    for i in 0..for_num_workers {
+        txs_out.push(BufWriter::new(
+            File::create(format!("{}-{}", i, TRANSACTIONS_DBFILE_SORTED)).unwrap(),
+        ));
+        blocks_out.push(BufWriter::new(
+            File::create(format!("{}-{}", i, BLOCKS_DBFILE_SORTED)).unwrap(),
+        ));
+        iopairs_by_src_out.push(BufWriter::new(
+            File::create(format!("{}-{}", i, IOPAIRS_DBFILE_SORTED_SRC)).unwrap(),
+        ));
+        iopairs_by_dest_out.push(BufWriter::new(
+            File::create(format!("{}-{}", i, IOPAIRS_DBFILE_SORTED_DEST)).unwrap(),
+        ));
+    }
 
     // We use unstable sorts because they are in-place and faster than stable sorts in rust. We
     // also use up vectors explicitly (with into_iter) to minimize memory usage, especially when we are sorting
@@ -110,22 +128,22 @@ pub fn sort_data() {
     txs.sort_unstable_by_key(|k| k.id);
     println!("Sorted transactions");
 
-    for t in txs.into_iter() {
-        serialize_into(&mut txs_out, &t).unwrap();
+    for (i, t) in txs.into_iter().enumerate() {
+        serialize_into(&mut txs_out[i % for_num_workers], &t).unwrap();
     }
     println!("Wrote sorted transactions");
 
     blocks.sort_unstable_by_key(|k| k.id);
     println!("Sorted blocks");
-    for b in blocks.into_iter() {
-        serialize_into(&mut blocks_out, &b).unwrap();
+    for (i, b) in blocks.into_iter().enumerate() {
+        serialize_into(&mut blocks_out[i % for_num_workers], &b).unwrap();
     }
     println!("Wrote sorted blocks");
 
     iopairs.sort_unstable_by_key(|k| k.source.src_tx);
     println!("Sorted iopairs by source tx");
-    for p in iopairs.iter() {
-        serialize_into(&mut iopairs_by_src_out, &p).unwrap();
+    for (i, p) in iopairs.iter().enumerate() {
+        serialize_into(&mut iopairs_by_src_out[i % for_num_workers], &p).unwrap();
     }
     println!("Wrote iopairs sorted by source tx");
 
@@ -138,8 +156,8 @@ pub fn sort_data() {
     iopairs.sort_unstable_by_key(|k| k.dest.unwrap().dest_tx);
     println!("Sorted iopairs by dest tx");
 
-    for p in iopairs.into_iter() {
-        serialize_into(&mut iopairs_by_dest_out, &p).unwrap();
+    for (i, p) in iopairs.iter().enumerate() {
+        serialize_into(&mut iopairs_by_dest_out[i % for_num_workers], &p).unwrap();
     }
     println!("Wrote iopairs sorted by dest tx");
 }

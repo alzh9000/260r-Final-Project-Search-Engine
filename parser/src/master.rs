@@ -1,8 +1,9 @@
 use clap::Parser;
 use parser::rpc_service::{SearchClient, DEFAULT_PORT};
-use parser::transaction::{TxHash, BlockHash};
+use parser::transaction::{BlockHash, InputOutputPair, TxHash};
 use std::net::{IpAddr, Ipv4Addr};
 use tarpc::{client, context, tokio_serde::formats::Bincode};
+use tokio;
 use tokio::time::Instant;
 
 #[derive(Parser, Debug)]
@@ -57,12 +58,15 @@ async fn main() -> anyhow::Result<()> {
     println!("Master clients spawned!");
 
     // let hashes = &["0f1d7406160f976ab69458811a386ebe444fcc8bf9b36a7ac27641b8182f8ee1", "5141b1d6eac1f5106fa709cec4aa7ec3a7d7b962d46c48a88899d9fa1dd40131", "41649a6830cc8092b926d9f66536efc74f552a44d88cf32543ab94406f220100"];
-    let hashes = &["5141b1d6eac1f5106fa709cec4aa7ec3a7d7b962d46c48a88899d9fa1dd40131", "41649a6830cc8092b926d9f66536efc74f552a44d88cf32543ab94406f220100"];
+    let hashes = &[
+        "5141b1d6eac1f5106fa709cec4aa7ec3a7d7b962d46c48a88899d9fa1dd40131",
+        "41649a6830cc8092b926d9f66536efc74f552a44d88cf32543ab94406f220100",
+    ];
     // let block_hashes = &["00000000000d6f206bec856b367e64dbcfdbbc2b31ea087c0fb834b0d15b0000", "00000000659e1402f1cdf3d2fd94065369e5cde43d6a00b6b5edcff01db50000", "0000000000006e3d40fbf76994f48d2204382076a706ecec921abea6d10b0200"];
     // let block_hashes = &["00000000659e1402f1cdf3d2fd94065369e5cde43d6a00b6b5edcff01db50000", "0000000000006e3d40fbf76994f48d2204382076a706ecec921abea6d10b0200"];
     let now = Instant::now();
     for hash in hashes {
-    let results = async {
+        let results = async {
         tokio::join! {
             // clients[0].get_transactions(context::current(), vec![TxHash::new_from_str(hash)])
             // clients[1].get_transactions(context::current(), vec![TxHash::new_from_str("4a9b10d5769616db54bedec98cb762ac75e26642ae4750f88144c6a9bbb70000")]),
@@ -73,11 +77,36 @@ async fn main() -> anyhow::Result<()> {
         }
         }
         .await;
-    }   
+    }
 
     let new_now = Instant::now();
     println!("{:?}, {:?}", now, new_now.duration_since(now));
-    
 
     Ok(())
+}
+
+async fn get_children_of_txs(clients: &Vec<SearchClient>, t: &Vec<TxHash>) -> Vec<InputOutputPair> {
+    match async {
+        tokio::join! {
+            clients[0].transactions_by_sources(context::current(), t.to_vec())
+        }
+    }
+    .await
+    {
+        (Ok(v),) => v,
+        (Err(e),) => panic!("{}", e),
+    }
+}
+
+async fn get_parents_of_txs(clients: &Vec<SearchClient>, t: &Vec<TxHash>) -> Vec<InputOutputPair> {
+    match async {
+        tokio::join! {
+            clients[0].transactions_by_destinations(context::current(), t.to_vec())
+        }
+    }
+    .await
+    {
+        (Ok(v),) => v,
+        (Err(e),) => panic!("{}", e),
+    }
 }

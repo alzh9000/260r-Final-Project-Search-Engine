@@ -1,8 +1,7 @@
 use clap::Parser;
-use itertools::Itertools;
-use parser::custom_format::{load_data_sorted, load_tx_ids_sorted};
+use parser::custom_format::load_tx_ids_sorted;
 use parser::rpc_service::{SearchClient, DEFAULT_PORT};
-use parser::transaction::{BlockHash, InputOutputPair, TxHash};
+use parser::transaction::{InputOutputPair, TxHash};
 use rand::seq::SliceRandom;
 use std::net::{IpAddr, Ipv4Addr};
 use tarpc::{client, context, tokio_serde::formats::Bincode};
@@ -67,7 +66,7 @@ async fn main() -> anyhow::Result<()> {
 
     let mut rng = rand::thread_rng();
     let now = Instant::now();
-    for i in 0..2 {
+    for _i in 0..2 {
         let hash = vec![*txs.choose(&mut rng).unwrap()];
         let results = get_children_of_txs(&clients, &hash).await;
         println!("children of {:?}: {:#?}", hash[0], results);

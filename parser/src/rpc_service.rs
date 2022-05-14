@@ -1,6 +1,6 @@
 use crate::transaction::{Block, BlockHash, InputOutputPair, Transaction, TxHash};
 
-pub const PORT: u16 = 6969;
+pub const DEFAULT_PORT: u16 = 6969;
 
 #[tarpc::service]
 pub trait Search {

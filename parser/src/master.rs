@@ -57,13 +57,17 @@ async fn main() -> anyhow::Result<()> {
 
     println!("Master clients spawned!");
 
-    // let hashes = &["0f1d7406160f976ab69458811a386ebe444fcc8bf9b36a7ac27641b8182f8ee1", "5141b1d6eac1f5106fa709cec4aa7ec3a7d7b962d46c48a88899d9fa1dd40131", "41649a6830cc8092b926d9f66536efc74f552a44d88cf32543ab94406f220100"];
     let hashes = &[
+        "0f1d7406160f976ab69458811a386ebe444fcc8bf9b36a7ac27641b8182f8ee1",
         "5141b1d6eac1f5106fa709cec4aa7ec3a7d7b962d46c48a88899d9fa1dd40131",
         "41649a6830cc8092b926d9f66536efc74f552a44d88cf32543ab94406f220100",
     ];
-    // let block_hashes = &["00000000000d6f206bec856b367e64dbcfdbbc2b31ea087c0fb834b0d15b0000", "00000000659e1402f1cdf3d2fd94065369e5cde43d6a00b6b5edcff01db50000", "0000000000006e3d40fbf76994f48d2204382076a706ecec921abea6d10b0200"];
-    // let block_hashes = &["00000000659e1402f1cdf3d2fd94065369e5cde43d6a00b6b5edcff01db50000", "0000000000006e3d40fbf76994f48d2204382076a706ecec921abea6d10b0200"];
+    let block_hashes = &[
+        "00000000000d6f206bec856b367e64dbcfdbbc2b31ea087c0fb834b0d15b0000",
+        "00000000659e1402f1cdf3d2fd94065369e5cde43d6a00b6b5edcff01db50000",
+        "0000000000006e3d40fbf76994f48d2204382076a706ecec921abea6d10b0200",
+    ];
+
     let now = Instant::now();
     for hash in hashes {
         let results = async {

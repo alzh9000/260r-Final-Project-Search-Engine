@@ -1,0 +1,47 @@
+loading data...
+data loaded... (29004422 tx hashes)
+Using client 0 with IP address 23.99.130.53:6969. Trying to connect... (A hang here means the client is unreachable.)
+Connected to client 0 with address 23.99.130.53:6969.
+Using client 1 with IP address 40.83.54.106:6969. Trying to connect... (A hang here means the client is unreachable.)
+Connected to client 1 with address 40.83.54.106:6969.
+Using client 2 with IP address 168.61.169.144:6969. Trying to connect... (A hang here means the client is unreachable.)
+Connected to client 2 with address 168.61.169.144:6969.
+Master clients spawned!
+
+Children queries throughput test...
+Children queries throughput test with 100000 iterations took: 58.75264835s
+
+Children queries latency test...
+Children queries latency test with 100000 iterations complete. Statistics:
+Mean latency: 587215.9923200002 ns
+Std deviation: 156249.49922683716 ns
+Min latency: 460544 ns
+p25 latency: 506111 ns
+p50 latency: 565759 ns
+p75 latency: 645119 ns
+p90 latency: 706047 ns
+p95 latency: 735231 ns
+p99 latency: 878079 ns
+p99.9 latency: 2392063 ns
+p99.99 latency: 6385663 ns
+p99.999 latency: 8486911 ns
+Max latency: 8994815 ns
+
+parents queries throughput test...
+parents queries throughput test with 100000 iterations took: 58.278827381s
+
+parents queries latency test...
+parents queries latency test with 100000 iterations complete. Statistics:
+Mean latency: 581139.9654399989 ns
+Std deviation: 148069.34780097738 ns
+Min latency: 463872 ns
+p25 latency: 505343 ns
+p50 latency: 555007 ns
+p75 latency: 639487 ns
+p90 latency: 698879 ns
+p95 latency: 731135 ns
+p99 latency: 821759 ns
+p99.9 latency: 2020351 ns
+p99.99 latency: 6959103 ns
+p99.999 latency: 9379839 ns
+Max latency: 9388031 ns

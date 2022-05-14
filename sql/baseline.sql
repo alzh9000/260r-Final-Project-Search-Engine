@@ -1,5 +1,8 @@
 .timer ON
 
+-- SELECT * FROM transactions WHERE id = '0f1d7406160f976ab69458811a386ebe444fcc8bf9b36a7ac27641b8182f8ee1';
+
+SELECT * FROM transactions LIMIT 5;
 
 
 -- Outdated, ignore:

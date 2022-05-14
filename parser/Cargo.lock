@@ -671,6 +671,7 @@ dependencies = [
  "hex",
  "itertools",
  "nom",
+ "rand",
  "rusqlite",
  "serde",
  "sha2",

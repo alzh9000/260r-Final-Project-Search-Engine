@@ -1,135 +1,118 @@
-use crate::transaction::{Block, InputOutputPair, Transaction};
+use parser::transaction::{Input, InputOutputPair, Output, TxHash};
 use rusqlite::params;
-use rusqlite::Connection;
 
+pub struct SQLiteTestDriver<'a> {
+    random_tx_loader: rusqlite::Statement<'a>,
 
-fn main() {
-    println!("Hello, world!");
-    // let sqlite_driver = sqlite::initialize();
-    // let sqlite_driver = Rc::new(sqlite_driver);
-
-    // let sqlite_driver1 = sqlite_driver.clone();
-    // let itx = move |x| {
-    //     sqlite::insert_tx(&sqlite_driver1, x);
-    // };
-
-    // let sqlite_driver2 = sqlite_driver.clone();
-    // let btx = move |x| {
-    //     sqlite::insert_block(&sqlite_driver2, x);
-    // };
-
-    // let sqlite_driver3 = sqlite_driver.clone();
-    // let ptx = move |x| {
-    //     sqlite::insert_iopair(&sqlite_driver3, x);
-    // };
-
-    // let mut p = parser::Parser::new(itx, btx, ptx);
-
-    // p.parse();
+    children_querier: rusqlite::Statement<'a>,
+    parents_querier: rusqlite::Statement<'a>,
 }
 
+impl<'a, 'b: 'a> SQLiteTestDriver<'a> {
+    pub fn new(conn: &'b rusqlite::Connection) -> SQLiteTestDriver<'a> {
+        SQLiteTestDriver {
+            random_tx_loader: conn
+                .prepare("SELECT id FROM transactions ORDER BY RANDOM() LIMIT ?1")
+                .unwrap(),
 
-// pub fn initialize() -> Connection {
-//     let connection = rusqlite::Connection::open("btc-test.db").unwrap();
+            children_querier: conn
+                .prepare("SELECT * FROM input_output_pairs WHERE input_output_pairs.src_tx = ?1")
+                .unwrap(),
 
-//     connection
-//         .pragma_update(None, "journal_mode", "memory")
-//         .unwrap();
+            parents_querier: conn
+                .prepare("SELECT * FROM input_output_pairs WHERE input_output_pairs.dest_tx = ?1")
+                .unwrap(),
+        }
+    }
 
-//     connection
-//         .pragma_update(None, "synchronous", "off")
-//         .unwrap();
+    pub fn load_random_tx_hashes(&mut self, n: u32) -> Vec<TxHash> {
+        let results = self
+            .random_tx_loader
+            .query(params![n])
+            .unwrap()
+            .mapped(|row| Ok(TxHash::new(row.get(0).unwrap())));
 
-//     connection
-//         .execute(
-//             "
-//         CREATE TABLE transactions (
-//             id                  BLOB NOT NULL,
-//             version             UNSIGNED INT4 NOT NULL,
-//             block               BLOB NOT NULL,
-//             block_height        UNSIGNED INT4 NOT NULL,
-//             size                UNSIGNED INT4 NOT NULL
-//         );",
-//             [],
-//         )
-//         .unwrap();
+        let mut result = Vec::new();
+        for r in results {
+            result.push(r.unwrap())
+        }
+        result
+    }
 
-//     connection
-//         .execute(
-//             "
-//         CREATE TABLE blocks (
-//             block_hash          BLOB NOT NULL,
-//             version             UNSIGNED INT4 NOT NULL,
-//             prev_block_id       BLOB NOT NULL,
-//             merkle_root         BLOB NOT NULL,
-//             unix_time           UNSIGNED INT4 NOT NULL,
-//             tx_count            UNSIGNED INT4 NOT NULL,
-//             height              UNSIGNED INT4 NOT NULL
-//         );",
-//             [],
-//         )
-//         .unwrap();
+    fn query_children(&mut self, tx: TxHash) -> Vec<InputOutputPair> {
+        let children = self
+            .children_querier
+            .query_map(params![tx], |row| {
+                let dest: Option<Input> = match (row.get(3), row.get(4)) {
+                    (Ok(dt), Ok(di)) => Some(Input {
+                        dest_tx: dt,
+                        dest_index: di,
+                    }),
+                    _ => None,
+                };
 
-//     connection
-//         .execute(
-//             "
-//         CREATE TABLE input_output_pairs (
-//             src_tx              BLOB NOT NULL,
-//             src_index           UNSIGNED INT4 NOT NULL,
-//             value               UNSIGNED INT8 NOT NULL,
-//             dest_tx             BLOB,
-//             dest_index          INT4
-//         );",
-//             [],
-//         )
-//         .unwrap();
+                Ok(InputOutputPair {
+                    source: Output {
+                        src_tx: row.get(0).unwrap(),
+                        src_index: row.get(1).unwrap(),
+                        value: row.get(2).unwrap(),
+                    },
+                    dest,
+                })
+            })
+            .unwrap();
 
-//     connection
-// }
+        let mut result = Vec::new();
+        for c in children {
+            result.push(c.unwrap())
+        }
+        result
+    }
 
-// pub fn insert_tx(conn: &Connection, tx: Transaction) {
-//     conn.execute(
-//         "INSERT INTO transactions VALUES (?1, ?2, ?3, ?4, ?5);",
-//         params![tx.id, tx.version, tx.block, tx.block_height, tx.size],
-//     )
-//     .unwrap();
-// }
+    fn query_parents(&mut self, tx: TxHash) -> Vec<InputOutputPair> {
+        let parents = self
+            .parents_querier
+            .query_map(params![tx], |row| {
+                let dest: Option<Input> = match (row.get(3), row.get(4)) {
+                    (Ok(dt), Ok(di)) => Some(Input {
+                        dest_tx: dt,
+                        dest_index: di,
+                    }),
+                    _ => None,
+                };
 
-// pub fn insert_block(conn: &Connection, b: Block) {
-//     conn.execute(
-//         "INSERT INTO blocks VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7);",
-//         params![
-//             b.id,
-//             b.version,
-//             b.prev_block_id,
-//             b.merkle_root,
-//             b.unix_time,
-//             b.tx_count,
-//             b.height
-//         ],
-//     )
-//     .unwrap();
-// }
+                Ok(InputOutputPair {
+                    source: Output {
+                        src_tx: row.get(0).unwrap(),
+                        src_index: row.get(1).unwrap(),
+                        value: row.get(2).unwrap(),
+                    },
+                    dest,
+                })
+            })
+            .unwrap();
 
-// pub fn insert_iopair(conn: &Connection, iopair: InputOutputPair) {
-//     let dest_tx = match iopair.dest {
-//         None => None,
-//         Some(d) => Some(d.dest_tx),
-//     };
-//     let dest_index = match iopair.dest {
-//         None => None,
-//         Some(d) => Some(d.dest_index),
-//     };
+        let mut result = Vec::new();
+        for c in parents {
+            result.push(c.unwrap())
+        }
+        result
+    }
+}
 
-//     conn.execute(
-//         "INSERT INTO input_output_pairs VALUES (?1, ?2, ?3, ?4, ?5);",
-//         params![
-//             iopair.source.src_tx,
-//             iopair.source.src_index,
-//             iopair.source.value,
-//             dest_tx,
-//             dest_index,
-//         ],
-//     )
-//     .unwrap();
-// }
+fn main() {
+    let sqlite_connection = rusqlite::Connection::open("sqlite-small.db").unwrap();
+    let mut driver = SQLiteTestDriver::new(&sqlite_connection);
+
+    // We load transaction data so that we can make real queries.
+    println!("loading random transactions to make real queries...");
+    let hashes = driver.load_random_tx_hashes(2);
+    println!("data loaded... ({} tx hashes)", hashes.len());
+
+    for h in hashes {
+        let results = driver.query_children(h);
+        println!("children of {:?}: {:#?}", h, results);
+        let results = driver.query_parents(h);
+        println!("parents of {:?}: {:#?}", h, results);
+    }
+}

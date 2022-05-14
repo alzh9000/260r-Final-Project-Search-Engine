@@ -1,6 +1,6 @@
 use duplicate::duplicate;
 use itertools::Itertools;
-use rusqlite::types::ToSqlOutput;
+use rusqlite::types::{FromSqlResult, ToSqlOutput, ValueRef};
 use serde::{Deserialize, Serialize};
 use std::cmp::{Ord, PartialOrd};
 use std::fmt;
@@ -60,6 +60,14 @@ impl rusqlite::ToSql for T {
     }
 }
 
+impl rusqlite::types::FromSql for T {
+    fn column_result(value: ValueRef<'_>) -> FromSqlResult<T> {
+        let slice = value.as_blob()?;
+        let slice: [u8; 32] = slice.try_into().map_err(|_| rusqlite::types::FromSqlError::InvalidBlobSize { expected_size: 32, blob_size: slice.len() })?;
+        Ok(T { 0: slice })
+    }
+}
+
 }
 
 fn print_hash(h: &Hash256) -> String {
@@ -92,7 +100,7 @@ pub struct Block {
 
 // We define the following three struct types to denote inputs and outputs of Bitcoin transactions.
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 // An InputOutputPair is a "link" between two transactions. `source` is the parent transaction, and
 // `dest` is the child. Note that source must exist, but dest might not (if the relevant output is
 // unspent).
@@ -101,14 +109,14 @@ pub struct InputOutputPair {
     pub dest: Option<Input>,
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Output {
     pub src_tx: TxHash,
     pub src_index: u32,
     pub value: Value,
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Input {
     pub dest_tx: TxHash,
     pub dest_index: u32,

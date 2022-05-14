@@ -13,6 +13,10 @@ path = "src/worker.rs"
 name = "search-master"
 path = "src/master.rs"
 
+[[bin]]
+name = "sqlite-baseline"
+path = "src/sqlite_baseline.rs"
+
 [dependencies]
 sha2 = "0.10.2"
 nom = "7"
@@ -28,3 +32,4 @@ tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 cached = "0"
 clap = { version = "3", features = ["derive"] }
 hex = "0"
+rand = "0"

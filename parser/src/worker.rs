@@ -1,6 +1,7 @@
+use clap::Parser;
 use futures::{future, prelude::*};
 use parser::custom_format::load_data_sorted;
-use parser::rpc_service::{Search, PORT};
+use parser::rpc_service::Search;
 use parser::transaction::{Block, BlockHash, InputOutputPair, Transaction, TxHash};
 use std::fmt::Debug;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
@@ -10,6 +11,14 @@ use tarpc::{
     context::Context,
     server::{self, incoming::Incoming, Channel},
 };
+
+#[derive(Parser, Debug)]
+#[clap(version)]
+struct Args {
+    #[clap(short, long, default_value = "6969")]
+    // If DEFAULT_PORT changes, it needs to be updated here too
+    port: u16,
+}
 
 #[derive(Clone)]
 struct SearchWorker {
@@ -131,8 +140,10 @@ where
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    let args = Args::parse();
+
     // TODO: take in a command-line arg or something:
-    let server_addr = (IpAddr::V4(Ipv4Addr::LOCALHOST), PORT);
+    let server_addr = (IpAddr::V4(Ipv4Addr::LOCALHOST), args.port);
 
     println!("loading data...");
     let _ = load_data_sorted();
@@ -152,7 +163,7 @@ async fn main() -> anyhow::Result<()> {
         // the generated World trait.
         .map(|channel| {
             let server = SearchWorker::new(channel.transport().peer_addr().unwrap());
-            println!("blahhh");
+            println!("Connected to by the master");
             channel.execute(server.serve())
         })
         // Max 10 channels.

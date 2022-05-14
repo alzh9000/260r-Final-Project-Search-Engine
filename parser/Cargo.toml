@@ -33,3 +33,4 @@ cached = "0"
 clap = { version = "3", features = ["derive"] }
 hex = "0"
 rand = "0"
+hdrhistogram = "7"

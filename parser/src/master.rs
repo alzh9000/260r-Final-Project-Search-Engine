@@ -1,4 +1,5 @@
 use clap::Parser;
+use hdrhistogram::Histogram;
 use parser::custom_format::load_tx_ids_sorted;
 use parser::rpc_service::{SearchClient, DEFAULT_PORT};
 use parser::transaction::{InputOutputPair, TxHash};
@@ -17,6 +18,9 @@ struct Args {
     #[clap(short, long)]
     port: Vec<u16>,
 }
+
+const THROUGHPUT_NUM_ITERS: u64 = 100_000;
+const LATENCY_NUM_ITERS: u64 = 100_000;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -61,19 +65,141 @@ async fn main() -> anyhow::Result<()> {
             i, c, ports[i]
         );
     }
-
     println!("Master clients spawned!");
+    println!("");
 
+    // Testing setup
     let mut rng = rand::thread_rng();
-    let now = Instant::now();
-    for _i in 0..2 {
-        let hash = vec![*txs.choose(&mut rng).unwrap()];
-        let results = get_children_of_txs(&clients, &hash).await;
-        println!("children of {:?}: {:#?}", hash[0], results);
+
+    // Run tests for children queries
+
+    {
+        println!("Children queries throughput test...");
+        let now = Instant::now();
+        for _i in 0..THROUGHPUT_NUM_ITERS {
+            let hash = vec![*txs.choose(&mut rng).unwrap()];
+            let _results = get_children_of_txs(&clients, &hash).await;
+
+            // println!("children of {:?}: {:#?}", hash[0], _results);
+        }
+        let new_now = Instant::now();
+        println!(
+            "Children queries throughput test with {} iterations took: {:?}",
+            THROUGHPUT_NUM_ITERS,
+            new_now.duration_since(now)
+        );
+        println!("");
     }
 
-    let new_now = Instant::now();
-    println!("{:?}, {:?}", now, new_now.duration_since(now));
+    {
+        println!("Children queries latency test...");
+        let mut latencies_ns = Histogram::<u64>::new(3).unwrap();
+
+        for _i in 0..LATENCY_NUM_ITERS {
+            let hash = vec![*txs.choose(&mut rng).unwrap()];
+            let now = Instant::now();
+            let _results = get_children_of_txs(&clients, &hash).await;
+            let new_now = Instant::now();
+
+            latencies_ns
+                .record(new_now.duration_since(now).as_nanos().try_into().unwrap())
+                .unwrap();
+
+            // println!("children of {:?}: {:#?}", hash[0], _results);
+        }
+        println!(
+            "Children queries latency test with {} iterations complete. Statistics:",
+            THROUGHPUT_NUM_ITERS,
+        );
+        println!("Mean latency: {} ns", latencies_ns.mean());
+        println!("Std deviation: {} ns", latencies_ns.stdev());
+        println!("Min latency: {} ns", latencies_ns.min());
+        println!("p25 latency: {} ns", latencies_ns.value_at_quantile(0.25));
+        println!("p50 latency: {} ns", latencies_ns.value_at_quantile(0.50));
+        println!("p75 latency: {} ns", latencies_ns.value_at_quantile(0.75));
+        println!("p90 latency: {} ns", latencies_ns.value_at_quantile(0.90));
+        println!("p95 latency: {} ns", latencies_ns.value_at_quantile(0.95));
+        println!("p99 latency: {} ns", latencies_ns.value_at_quantile(0.99));
+        println!(
+            "p99.9 latency: {} ns",
+            latencies_ns.value_at_quantile(0.999)
+        );
+        println!(
+            "p99.99 latency: {} ns",
+            latencies_ns.value_at_quantile(0.9999)
+        );
+        println!(
+            "p99.999 latency: {} ns",
+            latencies_ns.value_at_quantile(0.99999)
+        );
+        println!("Max latency: {} ns", latencies_ns.max());
+        println!("");
+    }
+
+    // Run tests for parents queries
+
+    {
+        println!("parents queries throughput test...");
+        let now = Instant::now();
+        for _i in 0..THROUGHPUT_NUM_ITERS {
+            let hash = vec![*txs.choose(&mut rng).unwrap()];
+            let _results = get_parents_of_txs(&clients, &hash).await;
+
+            // println!("parents of {:?}: {:#?}", hash[0], _results);
+        }
+        let new_now = Instant::now();
+        println!(
+            "parents queries throughput test with {} iterations took: {:?}",
+            THROUGHPUT_NUM_ITERS,
+            new_now.duration_since(now)
+        );
+        println!("");
+    }
+
+    {
+        println!("parents queries latency test...");
+        let mut latencies_ns = Histogram::<u64>::new(3).unwrap();
+
+        for _i in 0..LATENCY_NUM_ITERS {
+            let hash = vec![*txs.choose(&mut rng).unwrap()];
+            let now = Instant::now();
+            let _results = get_parents_of_txs(&clients, &hash).await;
+            let new_now = Instant::now();
+
+            latencies_ns
+                .record(new_now.duration_since(now).as_nanos().try_into().unwrap())
+                .unwrap();
+
+            // println!("parents of {:?}: {:#?}", hash[0], _results);
+        }
+        println!(
+            "parents queries latency test with {} iterations complete. Statistics:",
+            THROUGHPUT_NUM_ITERS,
+        );
+        println!("Mean latency: {} ns", latencies_ns.mean());
+        println!("Std deviation: {} ns", latencies_ns.stdev());
+        println!("Min latency: {} ns", latencies_ns.min());
+        println!("p25 latency: {} ns", latencies_ns.value_at_quantile(0.25));
+        println!("p50 latency: {} ns", latencies_ns.value_at_quantile(0.50));
+        println!("p75 latency: {} ns", latencies_ns.value_at_quantile(0.75));
+        println!("p90 latency: {} ns", latencies_ns.value_at_quantile(0.90));
+        println!("p95 latency: {} ns", latencies_ns.value_at_quantile(0.95));
+        println!("p99 latency: {} ns", latencies_ns.value_at_quantile(0.99));
+        println!(
+            "p99.9 latency: {} ns",
+            latencies_ns.value_at_quantile(0.999)
+        );
+        println!(
+            "p99.99 latency: {} ns",
+            latencies_ns.value_at_quantile(0.9999)
+        );
+        println!(
+            "p99.999 latency: {} ns",
+            latencies_ns.value_at_quantile(0.99999)
+        );
+        println!("Max latency: {} ns", latencies_ns.max());
+        println!("");
+    }
 
     Ok(())
 }

@@ -1,6 +1,6 @@
 use crate::{
     output_writer::OutputWriter,
-    transaction::{Block, BlockHash, InputOutputPair, Transaction, TxHash},
+    transaction::{Block, InputOutputPair, Transaction},
 };
 use bincode::serialize_into;
 use cached::proc_macro::once;

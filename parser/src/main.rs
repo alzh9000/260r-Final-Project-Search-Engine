@@ -55,7 +55,7 @@ fn main() {
             sort_and_write_data(1);
         }
         Operation::DumpDistributedCustomDbs => {
-            if args.for_num_workers < 2 {
+            if args.for_num_workers < 1 {
                 panic!("for_num_workers less than 1 with DumpDistributedCustomDbs operation doesn't make much sense (note that default value is 0)!")
             }
             let mut custom_drainer = CustomWriter::new();

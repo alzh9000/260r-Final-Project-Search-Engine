@@ -18,7 +18,6 @@ struct Args {
 enum Operation {
     DumpSqlite,
     DumpUnsortedCustomDB,
-    DumpSortedCustomDB,
     DumpDistributedCustomDbs,
 }
 
@@ -44,15 +43,6 @@ fn main() {
             let mut custom_drainer = CustomWriter::new();
             let mut p = parser::parser::Parser::new(&mut custom_drainer);
             p.parse(args.dat_files_to_parse);
-        }
-        Operation::DumpSortedCustomDB => {
-            if args.for_num_workers != 0 {
-                panic!("for_num_workers specified but has no effect unless Operation chosen in DumpDistributedCustomDBs!")
-            }
-            let mut custom_drainer = CustomWriter::new();
-            let mut p = parser::parser::Parser::new(&mut custom_drainer);
-            p.parse(args.dat_files_to_parse);
-            sort_and_write_data(1);
         }
         Operation::DumpDistributedCustomDbs => {
             if args.for_num_workers < 1 {

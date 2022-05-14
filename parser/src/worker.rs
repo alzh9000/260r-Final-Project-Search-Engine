@@ -146,7 +146,7 @@ async fn main() -> anyhow::Result<()> {
     println!("data loaded...");
 
     let mut listener = tarpc::serde_transport::tcp::listen(&server_addr, Bincode::default).await?;
-    println!("listener listening!");
+    println!("listener listening on port {}", args.port);
 
     listener.config_mut().max_frame_length(usize::MAX);
     listener

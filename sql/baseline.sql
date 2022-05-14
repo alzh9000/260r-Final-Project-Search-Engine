@@ -1,8 +1,18 @@
 .timer ON
 
--- SELECT * FROM transactions WHERE id = '0f1d7406160f976ab69458811a386ebe444fcc8bf9b36a7ac27641b8182f8ee1';
+-- For transactions: where hash corresponds with the id, based on Maegan's Google Sheet https://docs.google.com/spreadsheets/d/1HTtOwd4fn4yLmi-K2uEudE5Fjd6uFV2pwZ87Bk638og/edit?usp=sharing  
+-- One alone
+SELECT * FROM transactions WHERE id='hash1';
+-- Two together
+SELECT * FROM transactions WHERE id='hash1' and id='hash2';
+-- Three together
+SELECT * FROM transactions WHERE id='hash1' and id='hash2' and id='hash3';
+-- Two individually
+SELECT * FROM transactions WHERE id='hash1' or id='hash2';
+-- Three individually
+SELECT * FROM transactions WHERE id='hash1' or id='hash2' or id='hash3';
 
-SELECT * FROM transactions LIMIT 5;
+-- SELECT * FROM transactions LIMIT 5;
 
 
 -- Outdated, ignore:

@@ -110,3 +110,29 @@ async fn get_parents_of_txs(clients: &Vec<SearchClient>, t: &Vec<TxHash>) -> Vec
         (Err(e),) => panic!("{}", e),
     }
 }
+
+async fn get_grandchildren_of_tx(clients: &Vec<SearchClient>, t: &TxHash) -> Vec<InputOutputPair> {
+    let v = vec![*t];
+    let children = get_children_of_txs(clients, &v);
+    let mut children: Vec<TxHash> = children
+        .await
+        .iter()
+        .map(|x| x.dest.unwrap().dest_tx)
+        .collect();
+    children.sort();
+    children.dedup();
+    return get_children_of_txs(clients, &children).await;
+}
+
+async fn get_grandparents_of_tx(clients: &Vec<SearchClient>, t: &TxHash) -> Vec<InputOutputPair> {
+    let v = vec![*t];
+    let parents = get_parents_of_txs(clients, &v);
+    let mut parents: Vec<TxHash> = parents
+        .await
+        .iter()
+        .map(|x| x.dest.unwrap().dest_tx)
+        .collect();
+    parents.sort();
+    parents.dedup();
+    return get_parents_of_txs(clients, &parents).await;
+}

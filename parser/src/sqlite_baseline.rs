@@ -1,5 +1,11 @@
+use hdrhistogram::Histogram;
 use parser::transaction::{Input, InputOutputPair, Output, TxHash};
 use rusqlite::params;
+use std::cmp::max;
+use tokio::time::Instant;
+
+const THROUGHPUT_NUM_ITERS: usize = 1_000;
+const LATENCY_NUM_ITERS: usize = 1_000;
 
 pub struct SQLiteTestDriver<'a> {
     random_tx_loader: rusqlite::Statement<'a>,
@@ -25,7 +31,7 @@ impl<'a, 'b: 'a> SQLiteTestDriver<'a> {
         }
     }
 
-    pub fn load_random_tx_hashes(&mut self, n: u32) -> Vec<TxHash> {
+    pub fn load_random_tx_hashes(&mut self, n: usize) -> Vec<TxHash> {
         let results = self
             .random_tx_loader
             .query(params![n])
@@ -101,18 +107,141 @@ impl<'a, 'b: 'a> SQLiteTestDriver<'a> {
 }
 
 fn main() {
-    let sqlite_connection = rusqlite::Connection::open("sqlite-small.db").unwrap();
+    let sqlite_connection = rusqlite::Connection::open("sqlite.db").unwrap();
     let mut driver = SQLiteTestDriver::new(&sqlite_connection);
 
     // We load transaction data so that we can make real queries.
     println!("loading random transactions to make real queries...");
-    let hashes = driver.load_random_tx_hashes(2);
+    let hashes = driver.load_random_tx_hashes(max(THROUGHPUT_NUM_ITERS, LATENCY_NUM_ITERS));
     println!("data loaded... ({} tx hashes)", hashes.len());
 
-    for h in hashes {
-        let results = driver.query_children(h);
-        println!("children of {:?}: {:#?}", h, results);
-        let results = driver.query_parents(h);
-        println!("parents of {:?}: {:#?}", h, results);
+    // Run tests for children queries
+
+    {
+        println!("Children queries throughput test...");
+        let now = Instant::now();
+        for i in 0..THROUGHPUT_NUM_ITERS {
+            let h = hashes[i];
+            let _results = driver.query_children(h);
+
+            // println!("children of {:?}: {:#?}", h, _results);
+        }
+        let new_now = Instant::now();
+        println!(
+            "Children queries throughput test with {} iterations took: {:?}",
+            THROUGHPUT_NUM_ITERS,
+            new_now.duration_since(now)
+        );
+        println!("");
+    }
+
+    {
+        println!("Children queries latency test...");
+        let mut latencies_ns = Histogram::<u64>::new(3).unwrap();
+
+        for i in 0..LATENCY_NUM_ITERS {
+            let h = hashes[i];
+            let now = Instant::now();
+            let _results = driver.query_children(h);
+            let new_now = Instant::now();
+
+            latencies_ns
+                .record(new_now.duration_since(now).as_nanos().try_into().unwrap())
+                .unwrap();
+
+            // println!("children of {:?}: {:#?}", h, _results);
+        }
+        println!(
+            "Children queries latency test with {} iterations complete. Statistics:",
+            THROUGHPUT_NUM_ITERS,
+        );
+        println!("Mean latency: {} ns", latencies_ns.mean());
+        println!("Std deviation: {} ns", latencies_ns.stdev());
+        println!("Min latency: {} ns", latencies_ns.min());
+        println!("p25 latency: {} ns", latencies_ns.value_at_quantile(0.25));
+        println!("p50 latency: {} ns", latencies_ns.value_at_quantile(0.50));
+        println!("p75 latency: {} ns", latencies_ns.value_at_quantile(0.75));
+        println!("p90 latency: {} ns", latencies_ns.value_at_quantile(0.90));
+        println!("p95 latency: {} ns", latencies_ns.value_at_quantile(0.95));
+        println!("p99 latency: {} ns", latencies_ns.value_at_quantile(0.99));
+        println!(
+            "p99.9 latency: {} ns",
+            latencies_ns.value_at_quantile(0.999)
+        );
+        println!(
+            "p99.99 latency: {} ns",
+            latencies_ns.value_at_quantile(0.9999)
+        );
+        println!(
+            "p99.999 latency: {} ns",
+            latencies_ns.value_at_quantile(0.99999)
+        );
+        println!("Max latency: {} ns", latencies_ns.max());
+        println!("");
+    }
+
+    // Run tests for parents queries
+
+    {
+        println!("parents queries throughput test...");
+        let now = Instant::now();
+        for i in 0..THROUGHPUT_NUM_ITERS {
+            let h = hashes[i];
+            let _results = driver.query_parents(h);
+
+            // println!("parents of {:?}: {:#?}", h, _results);
+        }
+        let new_now = Instant::now();
+        println!(
+            "parents queries throughput test with {} iterations took: {:?}",
+            THROUGHPUT_NUM_ITERS,
+            new_now.duration_since(now)
+        );
+        println!("");
+    }
+
+    {
+        println!("parents queries latency test...");
+        let mut latencies_ns = Histogram::<u64>::new(3).unwrap();
+
+        for i in 0..LATENCY_NUM_ITERS {
+            let h = hashes[i];
+            let now = Instant::now();
+            let _results = driver.query_parents(h);
+            let new_now = Instant::now();
+
+            latencies_ns
+                .record(new_now.duration_since(now).as_nanos().try_into().unwrap())
+                .unwrap();
+
+            // println!("parents of {:?}: {:#?}", h, _results);
+        }
+        println!(
+            "parents queries latency test with {} iterations complete. Statistics:",
+            THROUGHPUT_NUM_ITERS,
+        );
+        println!("Mean latency: {} ns", latencies_ns.mean());
+        println!("Std deviation: {} ns", latencies_ns.stdev());
+        println!("Min latency: {} ns", latencies_ns.min());
+        println!("p25 latency: {} ns", latencies_ns.value_at_quantile(0.25));
+        println!("p50 latency: {} ns", latencies_ns.value_at_quantile(0.50));
+        println!("p75 latency: {} ns", latencies_ns.value_at_quantile(0.75));
+        println!("p90 latency: {} ns", latencies_ns.value_at_quantile(0.90));
+        println!("p95 latency: {} ns", latencies_ns.value_at_quantile(0.95));
+        println!("p99 latency: {} ns", latencies_ns.value_at_quantile(0.99));
+        println!(
+            "p99.9 latency: {} ns",
+            latencies_ns.value_at_quantile(0.999)
+        );
+        println!(
+            "p99.99 latency: {} ns",
+            latencies_ns.value_at_quantile(0.9999)
+        );
+        println!(
+            "p99.999 latency: {} ns",
+            latencies_ns.value_at_quantile(0.99999)
+        );
+        println!("Max latency: {} ns", latencies_ns.max());
+        println!("");
     }
 }

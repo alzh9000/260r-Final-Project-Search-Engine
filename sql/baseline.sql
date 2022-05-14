@@ -4,15 +4,19 @@
 -- One alone
 SELECT * FROM transactions WHERE id='hash1';
 -- Two together
-SELECT * FROM transactions WHERE id='hash1' and id='hash2';
--- Three together
-SELECT * FROM transactions WHERE id='hash1' and id='hash2' and id='hash3';
--- Two individually
 SELECT * FROM transactions WHERE id='hash1' or id='hash2';
--- Three individually
+-- Three together
 SELECT * FROM transactions WHERE id='hash1' or id='hash2' or id='hash3';
+-- In theory, the N individually should have times that are around N * One alone, since they're just sequential SQL queries.
+-- Two individually
+SELECT * FROM transactions WHERE id='hash1';
+SELECT * FROM transactions WHERE id='hash2';
+-- Three individually
+SELECT * FROM transactions WHERE id='hash1';
+SELECT * FROM transactions WHERE id='hash2';
+SELECT * FROM transactions WHERE id='hash3';
 
--- SELECT * FROM transactions LIMIT 5;
+SELECT * FROM transactions LIMIT 5;
 
 
 -- Outdated, ignore:

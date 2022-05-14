@@ -25,6 +25,7 @@ enum Operation {
 fn main() {
     println!("Hello, world!");
     let args = Args::parse();
+    println!("Parsing with configuration {:?}", args);
 
     match args.operation {
         Operation::DumpSqlite => {

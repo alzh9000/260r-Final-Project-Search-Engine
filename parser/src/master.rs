@@ -46,8 +46,8 @@ async fn main() -> anyhow::Result<()> {
 
     for (i, c) in args.client.iter().enumerate() {
         println!(
-            "Using client {} with IP address {:?}. Trying to connect... (A hang here means the client is unreachable.)",
-            i, c
+            "Using client {} with IP address {:?}:{}. Trying to connect... (A hang here means the client is unreachable.)",
+            i, c, ports[i]
         );
 
         let transport =

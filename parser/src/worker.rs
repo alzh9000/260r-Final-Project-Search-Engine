@@ -163,7 +163,7 @@ async fn main() -> anyhow::Result<()> {
         // the generated World trait.
         .map(|channel| {
             let server = SearchWorker::new(channel.transport().peer_addr().unwrap());
-            println!("blahhh");
+            println!("Connected to by the master");
             channel.execute(server.serve())
         })
         // Max 10 channels.

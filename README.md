@@ -10,3 +10,8 @@ List of targets:
 - `sqlite-baseline` --- A sqlite interface for querying data on a single machine.
 - `search-worker` --- The worker in our distributed search engine.
 - `search-master` --- The master in our distributed search engine.
+
+To set-up the cluster:
+- Spin up the number of workers + one master node
+- Run the `search-worker` in each of the worker nodes until the terminal says it's listening
+- Run the query in your master node to reach each of your worker nodes. To specify the worker clients and ports, list them sequentially `cargo run --release --bin search-master -- --client [IPADDR1] --port [PORT1] --client [IPADDR2] --port [PORT2]`.

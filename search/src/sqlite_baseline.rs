@@ -1,5 +1,5 @@
 use hdrhistogram::Histogram;
-use parser::transaction::{Input, InputOutputPair, Output, TxHash};
+use search::transaction::{Input, InputOutputPair, Output, TxHash};
 use rusqlite::params;
 use std::cmp::max;
 use tokio::time::Instant;

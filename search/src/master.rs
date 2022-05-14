@@ -1,8 +1,8 @@
 use clap::Parser;
 use hdrhistogram::Histogram;
-use parser::custom_format::load_tx_ids_sorted;
-use parser::rpc_service::{SearchClient, DEFAULT_PORT};
-use parser::transaction::{InputOutputPair, TxHash};
+use search::custom_format::load_tx_ids_sorted;
+use search::rpc_service::{SearchClient, DEFAULT_PORT};
+use search::transaction::{InputOutputPair, TxHash};
 use rand::seq::SliceRandom;
 use std::net::{IpAddr, Ipv4Addr};
 use tarpc::{client, context, tokio_serde::formats::Bincode};

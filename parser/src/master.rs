@@ -67,10 +67,10 @@ async fn main() -> anyhow::Result<()> {
 
     let mut rng = rand::thread_rng();
     let now = Instant::now();
-    for i in 0..10 {
+    for i in 0..2 {
         let hash = vec![*txs.choose(&mut rng).unwrap()];
         let results = get_children_of_txs(&clients, &hash).await;
-        println!("children of {:?}: {:?}", hash[0], results);
+        println!("children of {:?}: {:#?}", hash[0], results);
     }
 
     let new_now = Instant::now();

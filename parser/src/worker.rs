@@ -59,8 +59,8 @@ impl Search for SearchWorker {
             );
         }
 
-        result.sort_unstable_by_key(|k| k.source.src_tx);
-        result.dedup_by_key(|k| k.source.src_tx);
+        result.sort_unstable();
+        result.dedup();
 
         result
     }
@@ -81,8 +81,8 @@ impl Search for SearchWorker {
             );
         }
 
-        result.sort_unstable_by_key(|k| k.dest.unwrap().dest_tx);
-        result.dedup_by_key(|k| k.dest.unwrap().dest_tx);
+        result.sort_unstable();
+        result.dedup();
 
         result
     }

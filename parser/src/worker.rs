@@ -139,8 +139,7 @@ where
 async fn main() -> anyhow::Result<()> {
     let args = Args::parse();
 
-    // TODO: take in a command-line arg or something:
-    let server_addr = (IpAddr::V4(Ipv4Addr::LOCALHOST), args.port);
+    let server_addr = (IpAddr::V4(Ipv4Addr::UNSPECIFIED), args.port);
 
     println!("loading data...");
     let _ = load_data_sorted();

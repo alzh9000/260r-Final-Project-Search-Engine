@@ -1,5 +1,8 @@
 # 260r-Final-Project-Search-Engine
 
+in parser, just run "cargo run --release --bin sqlite-baseline"
+
+
 Link to the presentation: https://docs.google.com/presentation/d/1prOULuMPMDCbr_X2Q-mrp0hG1oda7GuKV8LsiTpDwB4/edit?usp=sharing 
 
 Store some `blk*.dat` files in the `./.bitcoin/blocks directory`, so that you can see how to do it. `blk*.dat` files are binary, so you shouldn't be able to open them or read them. Instead, we need to use a parser. 

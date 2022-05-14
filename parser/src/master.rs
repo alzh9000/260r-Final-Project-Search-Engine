@@ -96,28 +96,82 @@ async fn main() -> anyhow::Result<()> {
 }
 
 async fn get_children_of_txs(clients: &Vec<SearchClient>, t: &Vec<TxHash>) -> Vec<InputOutputPair> {
-    match async {
-        tokio::join! {
-            clients[0].transactions_by_sources(context::current(), t.to_vec())
+    match clients.len() {
+        1 => {
+            match async {
+                tokio::join! {
+                    clients[0].transactions_by_sources(context::current(), t.to_vec())
+                }
+            }
+            .await
+            {
+                (Ok(v),) => v,
+                (Err(e),) => panic!("{}", e),
+            }
         }
-    }
-    .await
-    {
-        (Ok(v),) => v,
-        (Err(e),) => panic!("{}", e),
+        3 => {
+            match async {
+                tokio::join! {
+                    clients[0].transactions_by_sources(context::current(), t.to_vec()),
+                    clients[1].transactions_by_sources(context::current(), t.to_vec()),
+                    clients[2].transactions_by_sources(context::current(), t.to_vec()),
+                }
+            }
+            .await
+            {
+                (x, y, z) => {
+                    let (mut x, mut y, mut z) = (x.unwrap(), y.unwrap(), z.unwrap());
+                    let mut result: Vec<InputOutputPair> = Vec::new();
+                    result.append(&mut x);
+                    result.append(&mut y);
+                    result.append(&mut z);
+                    result.sort_unstable();
+                    result.dedup();
+                    result
+                }
+            }
+        },
+        _ => panic!("Because of personal issues with the Rust compiler, we currently only support the cases where there are exactly 1 or 3 clients.")
     }
 }
 
 async fn get_parents_of_txs(clients: &Vec<SearchClient>, t: &Vec<TxHash>) -> Vec<InputOutputPair> {
-    match async {
-        tokio::join! {
-            clients[0].transactions_by_destinations(context::current(), t.to_vec())
+    match clients.len() {
+        1 => {
+            match async {
+                tokio::join! {
+                    clients[0].transactions_by_destinations(context::current(), t.to_vec())
+                }
+            }
+            .await
+            {
+                (Ok(v),) => v,
+                (Err(e),) => panic!("{}", e),
+            }
         }
-    }
-    .await
-    {
-        (Ok(v),) => v,
-        (Err(e),) => panic!("{}", e),
+        3 => {
+            match async {
+                tokio::join! {
+                    clients[0].transactions_by_destinations(context::current(), t.to_vec()),
+                    clients[1].transactions_by_destinations(context::current(), t.to_vec()),
+                    clients[2].transactions_by_destinations(context::current(), t.to_vec()),
+                }
+            }
+            .await
+            {
+                (x, y, z) => {
+                    let (mut x, mut y, mut z) = (x.unwrap(), y.unwrap(), z.unwrap());
+                    let mut result: Vec<InputOutputPair> = Vec::new();
+                    result.append(&mut x);
+                    result.append(&mut y);
+                    result.append(&mut z);
+                    result.sort_unstable();
+                    result.dedup();
+                    result
+                }
+            }
+        },
+        _ => panic!("Because of personal issues with the Rust compiler, we currently only support the cases where there are exactly 1 or 3 clients.")
     }
 }
 

@@ -33,7 +33,7 @@ async fn main() -> anyhow::Result<()> {
         );
     }
     let ports: Vec<u16> = match args.port.len() {
-        0 => vec![DEFAULT_PORT, args.client.len().try_into().unwrap()],
+        0 => vec![DEFAULT_PORT; args.client.len().try_into().unwrap()],
         _ => args.port,
     };
 
@@ -72,7 +72,6 @@ async fn main() -> anyhow::Result<()> {
         println!("children of {:?}: {:#?}", hash[0], results);
     }
 
-
     //     // let hashes = &["0f1d7406160f976ab69458811a386ebe444fcc8bf9b36a7ac27641b8182f8ee1", "5141b1d6eac1f5106fa709cec4aa7ec3a7d7b962d46c48a88899d9fa1dd40131", "41649a6830cc8092b926d9f66536efc74f552a44d88cf32543ab94406f220100"];
     // // let hashes = &["5141b1d6eac1f5106fa709cec4aa7ec3a7d7b962d46c48a88899d9fa1dd40131", "41649a6830cc8092b926d9f66536efc74f552a44d88cf32543ab94406f220100"];
     // // let hashes = &["41649a6830cc8092b926d9f66536efc74f552a44d88cf32543ab94406f220100"];
@@ -95,8 +94,8 @@ async fn main() -> anyhow::Result<()> {
     //     }
     //     }
     //     .await;
-    // //}   
-    
+    // //}
+
     let new_now = Instant::now();
     println!("{:?}, {:?}", now, new_now.duration_since(now));
 
